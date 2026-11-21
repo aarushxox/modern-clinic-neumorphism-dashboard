@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -28,8 +29,6 @@ export const Modal: React.FC<ModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   const maxWidthClasses = {
     sm: 'max-w-sm',
     md: 'max-w-md',
@@ -41,44 +40,58 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        className={`bg-[var(--surface-elevated)] text-[var(--text-primary)] rounded-[26px] shadow-2xl border border-[var(--border)] w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--surface-muted)]/70">
-          <div className="text-lg font-semibold text-[var(--text-primary)] flex-1 min-w-0">
-            {title}
-          </div>
-          <button
-            id="modal-close-btn"
-            onClick={onClose}
-            className="neu-pill-btn w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 cursor-pointer"
-            aria-label="Close modal"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          <motion.div
+            key="modal-panel"
+            initial={{ opacity: 0, scale: 0.96, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 10 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            className={`bg-[var(--surface-elevated)] text-[var(--text-primary)] rounded-[26px] shadow-2xl border border-[var(--border)] w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] flex flex-col overflow-hidden`}
+            role="dialog"
+            aria-modal="true"
           >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--surface-muted)]/70">
+              <div className="text-lg font-semibold text-[var(--text-primary)] flex-1 min-w-0">
+                {title}
+              </div>
+              <button
+                id="modal-close-btn"
+                onClick={onClose}
+                className="neu-pill-btn w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0 cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 text-[var(--text-secondary)]">
-          {children}
-        </div>
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto smooth-scroll-region p-6 text-[var(--text-secondary)]">
+              {children}
+            </div>
 
-        {/* Modal Footer */}
-        {footer && (
-          <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--surface-muted)]/60 flex justify-end gap-3 items-center">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>
+            {/* Modal Footer */}
+            {footer && (
+              <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--surface-muted)]/60 flex justify-end gap-3 items-center">
+                {footer}
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

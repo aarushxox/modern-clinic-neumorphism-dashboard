@@ -17,6 +17,7 @@ import {
   ClipboardClock,
   BookOpen,
   Filter,
+  Heart,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -42,6 +43,71 @@ interface DashboardViewProps {
 type VisitSeriesKey = 'totalVisits' | 'followUps' | 'newPatients';
 type PatientStatusFilter = 'ALL' | 'Active' | 'Pending Review' | 'Discharged';
 type ActivityCategoryFilter = 'ALL' | 'Tasks' | 'Records';
+type SparklineMetric = 'hr' | 'bp';
+
+interface SparklinePoint {
+  visit: string;
+  hr: number;
+  bp: number;
+  dia: number;
+}
+
+function buildPatientVitalsSparkline(
+  patient: PatientRecord | null,
+  rx: { sno: number; examination?: string; diagonisis: string }
+): {
+  points: SparklinePoint[];
+  latestHr: number;
+  latestBp: string;
+  isElevated: boolean;
+} {
+  const visits = patient ? ClinicDataProvider.getPatientVisits(patient).slice(0, 6).reverse() : [];
+  const dx = rx.diagonisis.toLowerCase();
+  const isHypertensive = dx.includes('hypertension') || dx.includes('htn') || dx.includes('cardio');
+  const isFebrile = dx.includes('fever') || dx.includes('pyrexia') || dx.includes('infection') || dx.includes('typhoid');
+
+  const seed = rx.sno % 17;
+  const baseHr = isFebrile ? 86 + (seed % 12) : 70 + (seed % 10);
+  const baseSys = isHypertensive ? 138 + (seed % 14) : 116 + (seed % 12);
+  const baseDia = isHypertensive ? 86 + (seed % 8) : 76 + (seed % 6);
+
+  const points: SparklinePoint[] = [];
+
+  if (visits.length >= 2) {
+    visits.forEach((v, i) => {
+      const exam = v.examination || '';
+      const pulseMatch = exam.match(/(?:Pulse:?\s*|pulse:?\s*)(\d{2,3})/i);
+      const bpMatch = exam.match(/(?:BP:?\s*|bp:?\s*)(\d{2,3})\s*\/\s*(\d{2,3})/i);
+      const wave = ((seed + i * 5) % 9) - 4;
+      const hr = pulseMatch ? parseInt(pulseMatch[1], 10) : Math.max(58, baseHr + wave);
+      const bp = bpMatch ? parseInt(bpMatch[1], 10) : Math.max(100, baseSys + wave * 2);
+      const dia = bpMatch ? parseInt(bpMatch[2], 10) : Math.max(64, baseDia + wave);
+      points.push({ visit: `V${i + 1}`, hr, bp, dia });
+    });
+  }
+
+  // Ensure a clean 6-point smooth trend curve
+  while (points.length < 6) {
+    const idx = points.length;
+    const wave = (((seed + idx * 7) % 11) - 5);
+    points.unshift({
+      visit: `R${6 - idx}`,
+      hr: Math.max(60, baseHr + wave),
+      bp: Math.max(102, baseSys + wave * 2),
+      dia: Math.max(65, baseDia + Math.round(wave * 0.8)),
+    });
+  }
+
+  const latest = points[points.length - 1];
+  const isElevated = latest.bp >= 140 || latest.hr >= 96;
+
+  return {
+    points,
+    latestHr: latest.hr,
+    latestBp: `${latest.bp}/${latest.dia}`,
+    isElevated,
+  };
+}
 
 interface ClinicActivityItem {
   id: string;
@@ -98,6 +164,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     useState<PatientStatusFilter>('ALL');
   const [activityFilter, setActivityFilter] =
     useState<ActivityCategoryFilter>('ALL');
+  const [sparklineMetric, setSparklineMetric] = useState<SparklineMetric>('hr');
 
   const metrics = ClinicDataProvider.getMetrics();
   const recentPatients = ClinicDataProvider.getRecentActivePatients(5);
@@ -113,11 +180,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const enrichedEncounters = useMemo(
     () =>
-      dayEncounters.map((rx, idx) => ({
-        rx,
-        status: deriveEncounterStatus(rx.diagonisis, idx),
-        patient: ClinicDataProvider.getPatient(rx.sno),
-      })),
+      dayEncounters.map((rx, idx) => {
+        const patient = ClinicDataProvider.getPatient(rx.sno);
+        return {
+          rx,
+          status: deriveEncounterStatus(rx.diagonisis, idx),
+          patient,
+          vitals: buildPatientVitalsSparkline(patient, rx),
+        };
+      }),
     [dayEncounters]
   );
 
@@ -815,14 +886,45 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </p>
             </div>
 
-            {/* Patient Status Filter Dropdown */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Sparkline Metric Toggle + Patient Status Filter Dropdown */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div
+                className="flex items-center gap-0.5 p-0.5 rounded-full bg-[var(--surface-muted)] border border-[var(--border-subtle)]"
+                role="group"
+                aria-label="Sparkline vital metric"
+              >
+                <button
+                  type="button"
+                  onClick={() => setSparklineMetric('hr')}
+                  className={`px-2.5 py-1 rounded-full text-[10.5px] transition-all cursor-pointer inline-flex items-center gap-1 ${
+                    sparklineMetric === 'hr'
+                      ? 'bg-[var(--surface-elevated)] text-[var(--text-primary)] font-bold shadow-xs'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] font-medium'
+                  }`}
+                >
+                  <Heart className="w-3 h-3" />
+                  <span>HR</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSparklineMetric('bp')}
+                  className={`px-2.5 py-1 rounded-full text-[10.5px] transition-all cursor-pointer inline-flex items-center gap-1 ${
+                    sparklineMetric === 'bp'
+                      ? 'bg-[var(--surface-elevated)] text-[var(--text-primary)] font-bold shadow-xs'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] font-medium'
+                  }`}
+                >
+                  <Activity className="w-3 h-3" />
+                  <span>BP</span>
+                </button>
+              </div>
+
               <label
                 htmlFor="dashboard-patient-status-filter"
                 className="text-[11px] font-medium text-[var(--text-muted)] flex items-center gap-1 whitespace-nowrap"
               >
                 <Filter className="w-3.5 h-3.5" />
-                <span>Patient Status</span>
+                <span className="sr-only sm:not-sr-only">Patient Status</span>
               </label>
               <select
                 id="dashboard-patient-status-filter"
@@ -900,7 +1002,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           ) : (
             <div className="space-y-1.5">
-              {filteredEncounters.slice(0, 6).map(({ rx, status, patient }, idx) => {
+              {filteredEncounters.slice(0, 6).map(({ rx, status, patient, vitals }, idx) => {
                 const computedAge = patient ? computeCurrentAge(patient).currentAge : null;
                 const iconBg =
                   idx % 3 === 0
@@ -915,20 +1017,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     ? 'var(--pastel-rose-fg)'
                     : 'var(--pastel-sage-fg)';
 
+                const sparkColor = vitals.isElevated
+                  ? 'var(--chart-5)'
+                  : sparklineMetric === 'hr'
+                  ? 'var(--chart-1)'
+                  : 'var(--chart-2)';
+
                 return (
                   <div
                     key={rx.id}
                     onClick={() => patient && onSelectPatient(patient)}
-                    className="p-2.5 flex items-center justify-between gap-3 bg-[var(--surface-muted)]/55 hover:bg-[var(--surface-muted)] border border-transparent hover:border-[var(--border)] rounded-[18px] transition-all cursor-pointer group"
+                    className="p-2.5 flex items-center justify-between gap-3 bg-[var(--surface-muted)]/55 hover:bg-[var(--surface-muted)] border border-transparent hover:border-[var(--border)] rounded-[18px] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <span
                         className="w-9 h-9 rounded-full grid place-items-center shrink-0"
                         style={{ background: iconBg, color: iconFg }}
                       >
                         <Users className="w-4 h-4" />
                       </span>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 min-w-0 flex-wrap">
                           <span className="text-[13px] font-semibold text-[var(--text-primary)] truncate group-hover:underline">
                             {rx.patientName || `Patient #${rx.sno}`}
@@ -945,6 +1053,62 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             ? ` · ${computedAge}y ${patient.sex}`
                             : ''}{' '}
                           · {rx.diagonisis}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini Recharts Vitals Sparkline (HR / BP Trend) */}
+                    <div
+                      className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-elevated)] border border-[var(--border-subtle)] shrink-0"
+                      title={
+                        sparklineMetric === 'hr'
+                          ? `Recent heart rate trend: ${vitals.latestHr} bpm`
+                          : `Recent blood pressure trend: ${vitals.latestBp} mmHg`
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <LineChart width={68} height={24} data={vitals.points}>
+                        <YAxis hide domain={['dataMin - 4', 'dataMax + 4']} />
+                        <RechartsTooltip
+                          cursor={false}
+                          content={({ active, payload }) => {
+                            if (!active || !payload || !payload.length) return null;
+                            const pt = payload[0].payload as SparklinePoint;
+                            return (
+                              <div
+                                className="px-2 py-1 rounded-lg text-[10px] font-mono shadow-md border border-[var(--border)] whitespace-nowrap"
+                                style={{
+                                  background: 'var(--tooltip-bg)',
+                                  color: 'var(--tooltip-text)',
+                                }}
+                              >
+                                {sparklineMetric === 'hr'
+                                  ? `${pt.hr} bpm`
+                                  : `${pt.bp}/${pt.dia} mmHg`}
+                              </div>
+                            );
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey={sparklineMetric}
+                          stroke={sparkColor}
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 2.5, fill: sparkColor, strokeWidth: 0 }}
+                          isAnimationActive={true}
+                          animationDuration={600}
+                        />
+                      </LineChart>
+                      <div className="text-right leading-tight min-w-[46px]">
+                        <div
+                          className="text-[10.5px] font-mono font-bold tabular-nums"
+                          style={{ color: sparkColor }}
+                        >
+                          {sparklineMetric === 'hr' ? `${vitals.latestHr}` : vitals.latestBp}
+                        </div>
+                        <div className="text-[9px] text-[var(--text-muted)] uppercase">
+                          {sparklineMetric === 'hr' ? 'bpm' : 'mmHg'}
                         </div>
                       </div>
                     </div>

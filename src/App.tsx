@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { HorizontalNav } from './components/HorizontalNav';
 import { DemoGuideModal } from './components/DemoGuideModal';
+import { PageSkeleton } from './components/Skeleton';
 import { PatientProfileModal } from './views/PatientProfileModal';
 import { DashboardView } from './views/DashboardView';
 import { TodayClinicView } from './views/TodayClinicView';
@@ -19,6 +21,8 @@ import { SettingsView } from './views/SettingsView';
 import { AboutView } from './views/AboutView';
 import { ToastProvider, useToast } from './components/Toast';
 import { ActiveModule, PatientRecord, ClinicSettings } from './types/clinic';
+
+const PAGE_SKELETON_MS = 800;
 
 const DEFAULT_SETTINGS: ClinicSettings = {
   doctorName: 'Dr. J.S. Pandey',
@@ -54,6 +58,8 @@ const MODULE_NAMES: Record<ActiveModule, string> = {
 function AppContent() {
   const { showToast } = useToast();
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
+  const mainScrollRef = useRef<HTMLElement | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
   const [isPatientModalOpen, setIsPatientModalOpen] = useState<boolean>(false);
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState<boolean>(false);
@@ -83,6 +89,17 @@ function AppContent() {
   useEffect(() => {
     setSidebarMode(settings.sidebarMode);
   }, [settings.sidebarMode]);
+
+  useEffect(() => {
+    setIsPageLoading(true);
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    const timer = window.setTimeout(() => {
+      setIsPageLoading(false);
+    }, PAGE_SKELETON_MS);
+    return () => window.clearTimeout(timer);
+  }, [activeModule]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -264,60 +281,85 @@ function AppContent() {
           />
         )}
 
-        <main className="flex-1 overflow-y-auto px-4 sm:px-7 pb-10 pt-2">
+        <main
+          ref={mainScrollRef}
+          className="flex-1 overflow-y-auto smooth-scroll-region px-4 sm:px-7 pb-10 pt-2"
+        >
           <div className="max-w-[1440px] mx-auto w-full">
-            {activeModule === 'dashboard' && (
-              <DashboardView
-                onNavigate={(mod) => setActiveModule(mod)}
-                onSelectPatient={handleSelectPatient}
-                onSelectClinicDate={handleNavigateToClinicDay}
-                settings={settings}
-              />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              {isPageLoading ? (
+                <motion.div
+                  key={`skeleton-${activeModule}`}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <PageSkeleton module={activeModule} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`view-${activeModule}`}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {activeModule === 'dashboard' && (
+                    <DashboardView
+                      onNavigate={(mod) => setActiveModule(mod)}
+                      onSelectPatient={handleSelectPatient}
+                      onSelectClinicDate={handleNavigateToClinicDay}
+                      settings={settings}
+                    />
+                  )}
 
-            {activeModule === 'today' && (
-              <TodayClinicView
-                key={selectedClinicDate}
-                initialDate={selectedClinicDate}
-                onSelectPatient={handleSelectPatient}
-              />
-            )}
+                  {activeModule === 'today' && (
+                    <TodayClinicView
+                      key={selectedClinicDate}
+                      initialDate={selectedClinicDate}
+                      onSelectPatient={handleSelectPatient}
+                    />
+                  )}
 
-            {activeModule === 'calendar' && (
-              <CalendarView onNavigateToClinicDay={handleNavigateToClinicDay} />
-            )}
+                  {activeModule === 'calendar' && (
+                    <CalendarView onNavigateToClinicDay={handleNavigateToClinicDay} />
+                  )}
 
-            {activeModule === 'search' && (
-              <PatientSearchView
-                key={quickSearchQuery}
-                initialQuery={quickSearchQuery}
-                onSelectPatient={handleSelectPatient}
-              />
-            )}
+                  {activeModule === 'search' && (
+                    <PatientSearchView
+                      key={quickSearchQuery}
+                      initialQuery={quickSearchQuery}
+                      onSelectPatient={handleSelectPatient}
+                    />
+                  )}
 
-            {activeModule === 'medicines' && <MedicinesView />}
+                  {activeModule === 'medicines' && <MedicinesView />}
 
-            {activeModule === 'shortcuts' && <ShortcutsView />}
+                  {activeModule === 'shortcuts' && <ShortcutsView />}
 
-            {activeModule === 'certificates' && <CertificatesView />}
+                  {activeModule === 'certificates' && <CertificatesView />}
 
-            {activeModule === 'cashbook' && <CashbookView />}
+                  {activeModule === 'cashbook' && <CashbookView />}
 
-            {activeModule === 'reports' && <ReportsView />}
+                  {activeModule === 'reports' && <ReportsView />}
 
-            {activeModule === 'data-health' && <DataHealthView />}
+                  {activeModule === 'data-health' && <DataHealthView />}
 
-            {activeModule === 'data-explorer' && <DataExplorerView />}
+                  {activeModule === 'data-explorer' && <DataExplorerView />}
 
-            {activeModule === 'settings' && (
-              <SettingsView
-                settings={settings}
-                onUpdateSettings={handleUpdateSettings}
-                onResetSettings={handleResetSettings}
-              />
-            )}
+                  {activeModule === 'settings' && (
+                    <SettingsView
+                      settings={settings}
+                      onUpdateSettings={handleUpdateSettings}
+                      onResetSettings={handleResetSettings}
+                    />
+                  )}
 
-            {activeModule === 'about' && <AboutView />}
+                  {activeModule === 'about' && <AboutView />}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </main>
       </div>

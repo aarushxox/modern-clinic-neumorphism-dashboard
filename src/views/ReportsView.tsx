@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'motion/react';
 import {
   BarChart3,
   Users,
@@ -6,15 +7,17 @@ import {
   Pill,
   FileCheck2,
   Calendar,
+  CalendarRange,
   Filter,
-  Layers,
   RotateCcw,
-  Sparkles,
-  CheckCircle2,
   Stethoscope,
-  TrendingUp,
 } from 'lucide-react';
-import { AnalyticsService, AnalyticsFilter } from '../services/analyticsService';
+import {
+  AnalyticsService,
+  AnalyticsFilter,
+  ARCHIVE_MIN_DATE,
+  ARCHIVE_MAX_DATE,
+} from '../services/analyticsService';
 
 type AnalyticsSection =
   | 'demographics'
@@ -24,12 +27,22 @@ type AnalyticsSection =
   | 'certificates'
   | 'age-patterns';
 
+const DATE_RANGE_PRESETS = [
+  { id: '30d', label: 'Last 30 Days', start: '2026-07-14', end: '2026-08-12' },
+  { id: '6m', label: 'Last 6 Months', start: '2026-02-12', end: '2026-08-12' },
+  { id: 'ytd', label: '2026 YTD', start: '2026-01-01', end: '2026-08-12' },
+  { id: '5y', label: '2020–2025', start: '2020-01-01', end: '2025-12-31' },
+  { id: 'all', label: 'Full Archive', start: '', end: '' },
+];
+
 export const ReportsView: React.FC = () => {
   const [activeSection, setActiveSection] = useState<AnalyticsSection>('demographics');
   const [filters, setFilters] = useState<AnalyticsFilter>({
     gender: 'ALL',
     ageCohort: 'ALL',
     period: 'ALL',
+    startDate: '',
+    endDate: '',
   });
 
   const analyticsData = useMemo(() => {
@@ -37,11 +50,59 @@ export const ReportsView: React.FC = () => {
   }, [filters]);
 
   const hasActiveFilters =
-    filters.gender !== 'ALL' || filters.ageCohort !== 'ALL' || filters.period !== 'ALL';
+    filters.gender !== 'ALL' ||
+    filters.ageCohort !== 'ALL' ||
+    filters.period !== 'ALL' ||
+    Boolean(filters.startDate) ||
+    Boolean(filters.endDate);
 
   const handleClearFilters = () => {
-    setFilters({ gender: 'ALL', ageCohort: 'ALL', period: 'ALL' });
+    setFilters({
+      gender: 'ALL',
+      ageCohort: 'ALL',
+      period: 'ALL',
+      startDate: '',
+      endDate: '',
+    });
   };
+
+  const handleStartDateChange = (val: string) => {
+    setFilters((prev) => {
+      const nextEnd = prev.endDate && val && val > prev.endDate ? val : prev.endDate;
+      return {
+        ...prev,
+        period: 'ALL',
+        startDate: val,
+        endDate: nextEnd,
+      };
+    });
+  };
+
+  const handleEndDateChange = (val: string) => {
+    setFilters((prev) => {
+      const nextStart = prev.startDate && val && val < prev.startDate ? val : prev.startDate;
+      return {
+        ...prev,
+        period: 'ALL',
+        startDate: nextStart,
+        endDate: val,
+      };
+    });
+  };
+
+  const applyDatePreset = (start: string, end: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      period: 'ALL',
+      startDate: start,
+      endDate: end,
+    }));
+  };
+
+  const maxAgeVal = Math.max(1, ...analyticsData.ageDistribution.map((d) => d.value));
+  const maxRegYearVal = Math.max(1, ...analyticsData.registrationsByYear.map((d) => d.value));
+  const maxRegMonthVal = Math.max(1, ...analyticsData.registrationsByMonth.map((d) => d.value));
+  const maxDxVal = Math.max(1, ...analyticsData.topDiagnosesOverall.map((d) => d.value));
 
   return (
     <div className="space-y-6">
@@ -78,21 +139,99 @@ export const ReportsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Interactive Global Filters Bar */}
-      <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] shadow-2xs space-y-3">
+      {/* Interactive Global Filters & Calendar Date Range Bar */}
+      <div className="neu-card rounded-[24px] p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 text-[var(--text-muted)] font-bold uppercase tracking-wider text-[10px]">
             <Filter className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
-            <span>Interactive Demographic & Period Filters:</span>
+            <span>Interactive Demographic &amp; Calendar Date Range Filters</span>
           </div>
 
-          {hasActiveFilters && (
-            <span className="px-2 py-0.5 text-[11px] font-bold bg-[var(--accent-soft)] text-[var(--accent-text)] rounded-md">
-              Showing analytics for active filters
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="badge-blue px-3 py-0.5 text-[11px] font-semibold inline-flex items-center gap-1.5">
+              <CalendarRange className="w-3 h-3" />
+              <span>{analyticsData.activeDateRangeLabel}</span>
             </span>
-          )}
+            <span className="badge-neutral px-3 py-0.5 text-[11px] font-mono font-semibold">
+              {analyticsData.totalPatientsAnalyzed.toLocaleString()} pts ·{' '}
+              {analyticsData.totalEncountersAnalyzed.toLocaleString()} visits
+            </span>
+          </div>
         </div>
 
+        {/* Date Range Selection Controls + Quick Presets */}
+        <div className="p-3.5 rounded-[20px] bg-[var(--surface-muted)]/75 border border-[var(--border-subtle)] space-y-3">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+              <div>
+                <label
+                  htmlFor="reports-start-date"
+                  className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1.5"
+                >
+                  From Calendar Date
+                </label>
+                <div className="relative">
+                  <Calendar className="w-3.5 h-3.5 text-[var(--accent-primary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    id="reports-start-date"
+                    type="date"
+                    min={ARCHIVE_MIN_DATE}
+                    max={filters.endDate || ARCHIVE_MAX_DATE}
+                    value={filters.startDate || ''}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
+                    className="w-full h-9 pl-9 pr-3.5 text-xs font-mono rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="reports-end-date"
+                  className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1.5"
+                >
+                  To Calendar Date
+                </label>
+                <div className="relative">
+                  <Calendar className="w-3.5 h-3.5 text-[var(--accent-primary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    id="reports-end-date"
+                    type="date"
+                    min={filters.startDate || ARCHIVE_MIN_DATE}
+                    max={ARCHIVE_MAX_DATE}
+                    value={filters.endDate || ''}
+                    onChange={(e) => handleEndDateChange(e.target.value)}
+                    className="w-full h-9 pl-9 pr-3.5 text-xs font-mono rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {DATE_RANGE_PRESETS.map((preset) => {
+                const isSelected =
+                  (filters.startDate || '') === preset.start &&
+                  (filters.endDate || '') === preset.end &&
+                  filters.period === 'ALL';
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyDatePreset(preset.start, preset.end)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'btn-editorial-primary'
+                        : 'neu-pill-btn text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Demographic & Cohort Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1.5">
@@ -132,7 +271,14 @@ export const ReportsView: React.FC = () => {
             </label>
             <select
               value={filters.period}
-              onChange={(e) => setFilters({ ...filters, period: e.target.value as any })}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  period: e.target.value as any,
+                  startDate: '',
+                  endDate: '',
+                })
+              }
               className="w-full h-9 px-3.5 text-xs rounded-full border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-primary)] cursor-pointer"
             >
               <option value="ALL">Full Longitudinal Ledger (1999–2026)</option>
@@ -175,17 +321,23 @@ export const ReportsView: React.FC = () => {
 
       {/* TAB CONTENT: SECTION 1 - DEMOGRAPHICS */}
       {activeSection === 'demographics' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <motion.div
+          key="section-demographics"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart 1: Current Calculated Age Distribution */}
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+            <div className="neu-card rounded-[24px] p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
                 <div>
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
                     Current Calculated Age Distribution
                   </h3>
                   <p className="text-[11px] text-[var(--text-muted)]">
-                    Computed real-time from birth dates & earliest registration dates
+                    Computed real-time from birth dates &amp; earliest registration dates
                   </p>
                 </div>
                 <span className="badge-blue text-[10px] font-bold px-2.5 py-0.5">
@@ -204,9 +356,9 @@ export const ReportsView: React.FC = () => {
                     </div>
                     <div className="w-full bg-[var(--surface-muted)] h-2.5 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full transition-all duration-300"
+                        className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{
-                          width: `${(item.value / 10000) * 100}%`,
+                          width: `${Math.max(4, (item.value / maxAgeVal) * 100)}%`,
                           backgroundColor: 'var(--chart-1)',
                         }}
                       />
@@ -225,24 +377,24 @@ export const ReportsView: React.FC = () => {
                       Patient Demographic Sex Ratio
                     </h3>
                     <p className="text-[11px] text-[var(--text-muted)]">
-                      Verified male vs female clinical registrations
+                      Verified male vs female clinical registrations ({analyticsData.activeDateRangeLabel})
                     </p>
                   </div>
                   <span className="badge-sage text-[10px] font-bold px-2.5 py-0.5">
-                    43,488 Verified
+                    {analyticsData.totalPatientsAnalyzed.toLocaleString()} Analyzed
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 my-6">
                   <div className="p-4 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] text-center space-y-1">
                     <div className="text-2xl font-bold text-[var(--accent-primary)] font-mono">
-                      54.1%
+                      {analyticsData.malePercentage}%
                     </div>
                     <div className="text-xs font-bold text-[var(--text-primary)]">
                       Male Patients
                     </div>
                     <div className="text-[11px] text-[var(--text-muted)] font-mono">
-                      23,527 profiles
+                      {analyticsData.genderRatio[0].value.toLocaleString()} profiles
                     </div>
                   </div>
 
@@ -251,13 +403,13 @@ export const ReportsView: React.FC = () => {
                       className="text-2xl font-bold font-mono"
                       style={{ color: 'var(--pastel-rose-fg)' }}
                     >
-                      45.9%
+                      {analyticsData.femalePercentage}%
                     </div>
                     <div className="text-xs font-bold text-[var(--text-primary)]">
                       Female Patients
                     </div>
                     <div className="text-[11px] text-[var(--text-muted)] font-mono">
-                      19,961 profiles
+                      {analyticsData.genderRatio[1].value.toLocaleString()} profiles
                     </div>
                   </div>
                 </div>
@@ -298,42 +450,44 @@ export const ReportsView: React.FC = () => {
 
           {/* Chart 4 & 5: Registrations by Year & Month */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
+            <div className="neu-card rounded-[24px] p-5 space-y-4">
+              <div className="border-b border-[var(--border-subtle)] pb-2">
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  New Patient Registrations by Year (1999–2026)
+                  New Patient Registrations by Year
                 </h3>
                 <p className="text-[11px] text-[var(--text-muted)]">
-                  Longitudinal influx of new patient records over 27 years
+                  Filtered longitudinal influx ({analyticsData.activeDateRangeLabel})
                 </p>
               </div>
 
-              <div className="grid grid-cols-9 gap-1 h-36 items-end pt-4">
+              <div className="flex items-end gap-1.5 h-36 pt-4">
                 {analyticsData.registrationsByYear.slice(-9).map((yr, idx) => (
-                  <div key={idx} className="flex flex-col items-center gap-1 h-full justify-end group">
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group">
                     <div className="text-[9px] font-mono text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity">
                       {yr.value}
                     </div>
                     <div
-                      className="w-full rounded-t transition-all group-hover:opacity-80"
+                      className="w-full max-w-[38px] rounded-t-lg transition-all duration-500 ease-out group-hover:opacity-80"
                       style={{
-                        height: `${(yr.value / 2500) * 100}%`,
+                        height: `${Math.max(8, (yr.value / maxRegYearVal) * 100)}%`,
                         backgroundColor: 'var(--chart-1)',
                       }}
                     />
-                    <div className="text-[10px] font-bold text-[var(--text-secondary)]">{yr.label.slice(2)}</div>
+                    <div className="text-[10px] font-bold text-[var(--text-secondary)]">
+                      {yr.label.length === 4 ? yr.label.slice(2) : yr.label}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
+            <div className="neu-card rounded-[24px] p-5 space-y-4">
+              <div className="border-b border-[var(--border-subtle)] pb-2">
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Registrations by Month of Year (Seasonal Aggregate)
+                  Registrations by Month of Year
                 </h3>
                 <p className="text-[11px] text-[var(--text-muted)]">
-                  Aggregated seasonal registration density across all historical years
+                  Seasonal density across selected calendar dates
                 </p>
               </div>
 
@@ -344,10 +498,10 @@ export const ReportsView: React.FC = () => {
                       {m.value}
                     </div>
                     <div
-                      className="w-full rounded-t transition-all group-hover:opacity-80"
+                      className="w-full rounded-t-md transition-all duration-500 ease-out group-hover:opacity-80"
                       style={{
-                        height: `${(m.value / 4500) * 100}%`,
-                        backgroundColor: 'var(--chart-3)',
+                        height: `${m.value === 0 ? 3 : Math.max(8, (m.value / maxRegMonthVal) * 100)}%`,
+                        backgroundColor: m.value === 0 ? 'var(--border)' : 'var(--chart-3)',
                       }}
                     />
                     <div className="text-[9px] font-bold text-[var(--text-secondary)]">{m.label[0]}</div>
@@ -356,21 +510,27 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* TAB CONTENT: SECTION 2 - DISEASE PATTERNS */}
       {activeSection === 'diseases' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <motion.div
+          key="section-diseases"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Top 15 Diagnoses Overall */}
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
+            <div className="neu-card rounded-[24px] p-5 space-y-4">
+              <div className="border-b border-[var(--border-subtle)] pb-2">
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">
                   Top 15 Clinical Diagnoses Overall
                 </h3>
                 <p className="text-[11px] text-[var(--text-muted)]">
-                  Leading morbidity patterns across 158,361 total historical visits
+                  Leading morbidity patterns across {analyticsData.totalEncountersAnalyzed.toLocaleString()} encounters in range
                 </p>
               </div>
 
@@ -385,9 +545,9 @@ export const ReportsView: React.FC = () => {
                     </div>
                     <div className="w-full bg-[var(--surface-muted)] h-2 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full"
+                        className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{
-                          width: `${(d.value / 50000) * 100}%`,
+                          width: `${Math.max(4, (d.value / maxDxVal) * 100)}%`,
                           backgroundColor: 'var(--chart-1)',
                         }}
                       />
@@ -400,8 +560,8 @@ export const ReportsView: React.FC = () => {
             {/* Disease Seasonality & Repeat Patterns */}
             <div className="space-y-6">
               {/* Seasonality */}
-              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-3">
-                <div className="border-b border-[var(--border)] pb-2">
+              <div className="neu-card rounded-[24px] p-5 space-y-3">
+                <div className="border-b border-[var(--border-subtle)] pb-2">
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
                     Seasonal Morbidity Variance
                   </h3>
@@ -412,7 +572,7 @@ export const ReportsView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   {analyticsData.seasonalityDistribution.map((s, idx) => (
-                    <div key={idx} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
+                    <div key={idx} className="p-3.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
                       <div className="flex justify-between items-center text-xs font-bold text-[var(--text-primary)]">
                         <span>{s.label.split(' ')[0]}</span>
                         <span className="font-mono text-[var(--accent-text)]">{s.value.toLocaleString()}</span>
@@ -425,7 +585,7 @@ export const ReportsView: React.FC = () => {
 
               {/* Acute vs Chronic Pattern */}
               <div className="neu-card p-5 rounded-[24px] space-y-3">
-                <div className="border-b border-[var(--border)] pb-2">
+                <div className="border-b border-[var(--border-subtle)] pb-2">
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
                     Acute Episodes vs. Chronic Follow-up Ratio
                   </h3>
@@ -446,193 +606,223 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* TAB CONTENT: SECTION 3 - VISIT PATTERNS */}
-      {activeSection === 'visits' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="neu-card p-5 rounded-[24px] text-center space-y-1">
-              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Average Visits / Patient</span>
-              <div className="text-2xl font-bold text-[var(--accent-primary)] font-mono">3.64</div>
-              <p className="text-[11px] text-[var(--text-secondary)]">Historical mean continuity of care</p>
-            </div>
-
-            <div className="neu-card p-5 rounded-[24px] text-center space-y-1">
-              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Peak Clinic Day</span>
-              <div className="text-2xl font-bold text-[var(--success)] font-mono">Monday</div>
-              <p className="text-[11px] text-[var(--text-secondary)]">17.9% of weekly patient volume</p>
-            </div>
-
-            <div className="neu-card p-5 rounded-[24px] text-center space-y-1">
-              <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Peak Clinic Month</span>
-              <div className="text-2xl font-bold text-[var(--pastel-lilac-fg)] font-mono">August</div>
-              <p className="text-[11px] text-[var(--text-secondary)]">Monsoon viral & gastro peak</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Visits by Day of Week */}
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
-                <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Clinic Visits by Day of Week
-                </h3>
-              </div>
-
-              <div className="space-y-2">
-                {analyticsData.visitsByDayOfWeek.map((d, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold text-[var(--text-primary)]">
-                      <span>{d.label}</span>
-                      <span className="font-mono text-[var(--text-muted)]">{d.value.toLocaleString()} visits ({d.percentage}%)</span>
-                    </div>
-                    <div className="w-full bg-[var(--surface-muted)] h-2 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(d.value / 30000) * 100}%`,
-                          backgroundColor: 'var(--chart-1)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visit Frequency Distribution */}
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
-                <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Patient Visit Frequency Distribution
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                {analyticsData.visitFrequencyDistribution.map((vf, idx) => (
-                  <div key={idx} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
-                    <div className="flex justify-between items-center text-xs font-bold text-[var(--text-primary)]">
-                      <span>{vf.label}</span>
-                      <span className="font-mono text-[var(--accent-text)]">{vf.percentage}%</span>
-                    </div>
-                    <div className="text-[11px] text-[var(--text-muted)] font-mono">
-                      {vf.value.toLocaleString()} patient profiles
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB CONTENT: SECTION 4 - MEDICINE INSIGHTS */}
-      {activeSection === 'medicines' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Prescribed Medicines */}
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
-                <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Top 10 Prescribed Pharmaceutical Formulations
-                </h3>
-              </div>
-
-              <div className="space-y-2.5">
-                {analyticsData.topMedicines.slice(0, 10).map((m, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold text-[var(--text-primary)]">
-                      <span className="truncate">{idx + 1}. {m.label}</span>
-                      <span className="font-mono text-[var(--accent-text)] shrink-0 font-bold">
-                        {m.value.toLocaleString()} rx
-                      </span>
-                    </div>
-                    <div className="w-full bg-[var(--surface-muted)] h-2 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(m.value / 45000) * 100}%`,
-                          backgroundColor: 'var(--chart-4)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Formulations & Frequency Breakdown */}
-            <div className="space-y-6">
-              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-3">
-                <div className="border-b border-[var(--border)] pb-2">
-                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                    Prescribed Dosage Forms
-                  </h3>
+      {activeSection === 'visits' && (() => {
+        const maxDayVal = Math.max(1, ...analyticsData.visitsByDayOfWeek.map((d) => d.value));
+        return (
+          <motion.div
+            key="section-visits"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="neu-card p-5 rounded-[24px] text-center space-y-1">
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Average Visits / Patient</span>
+                <div className="text-2xl font-bold text-[var(--accent-primary)] font-mono">
+                  {analyticsData.avgVisitsPerPatient}
                 </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {analyticsData.medicineFormulations.map((f, idx) => (
-                    <div key={idx} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] text-center">
-                      <div className="text-base font-bold text-[var(--accent-primary)] font-mono">{f.percentage}%</div>
-                      <div className="text-xs font-bold text-[var(--text-primary)] truncate">{f.label.split(' ')[0]}</div>
-                      <div className="text-[10px] text-[var(--text-muted)] font-mono">{f.value.toLocaleString()}</div>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-[11px] text-[var(--text-secondary)]">Mean continuity for selected range</p>
               </div>
 
-              {/* Dosage Frequency */}
-              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-3">
-                <div className="border-b border-[var(--border)] pb-2">
+              <div className="neu-card p-5 rounded-[24px] text-center space-y-1">
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Peak Clinic Day</span>
+                <div className="text-2xl font-bold text-[var(--success)] font-mono">Monday</div>
+                <p className="text-[11px] text-[var(--text-secondary)]">17.9% of weekly patient volume</p>
+              </div>
+
+              <div className="neu-card p-5 rounded-[24px] text-center space-y-1">
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Peak Clinic Month</span>
+                <div className="text-2xl font-bold text-[var(--pastel-lilac-fg)] font-mono">August</div>
+                <p className="text-[11px] text-[var(--text-secondary)]">Monsoon viral &amp; gastro peak</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Visits by Day of Week */}
+              <div className="neu-card rounded-[24px] p-5 space-y-4">
+                <div className="border-b border-[var(--border-subtle)] pb-2">
                   <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                    Dosage Frequency Patterns
+                    Clinic Visits by Day of Week
                   </h3>
                 </div>
 
                 <div className="space-y-2">
-                  {analyticsData.dosageFrequencies.map((df, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-xs font-semibold text-[var(--text-secondary)] border-b border-[var(--border)] pb-1.5">
-                      <span>{df.label}</span>
-                      <span className="font-mono text-[var(--text-primary)] font-bold">{df.percentage}% ({df.value.toLocaleString()} rx)</span>
+                  {analyticsData.visitsByDayOfWeek.map((d, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold text-[var(--text-primary)]">
+                        <span>{d.label}</span>
+                        <span className="font-mono text-[var(--text-muted)]">
+                          {d.value.toLocaleString()} visits ({d.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-[var(--surface-muted)] h-2 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500 ease-out"
+                          style={{
+                            width: `${Math.max(4, (d.value / maxDayVal) * 100)}%`,
+                            backgroundColor: 'var(--chart-1)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Visit Frequency Distribution */}
+              <div className="neu-card rounded-[24px] p-5 space-y-4">
+                <div className="border-b border-[var(--border-subtle)] pb-2">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Patient Visit Frequency Distribution
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  {analyticsData.visitFrequencyDistribution.map((vf, idx) => (
+                    <div key={idx} className="p-3.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
+                      <div className="flex justify-between items-center text-xs font-bold text-[var(--text-primary)]">
+                        <span>{vf.label}</span>
+                        <span className="font-mono text-[var(--accent-text)]">{vf.percentage}%</span>
+                      </div>
+                      <div className="text-[11px] text-[var(--text-muted)] font-mono">
+                        {vf.value.toLocaleString()} patient profiles
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        );
+      })()}
+
+      {/* TAB CONTENT: SECTION 4 - MEDICINE INSIGHTS */}
+      {activeSection === 'medicines' && (() => {
+        const maxMedVal = Math.max(1, ...analyticsData.topMedicines.map((m) => m.value));
+        return (
+          <motion.div
+            key="section-medicines"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Top Prescribed Medicines */}
+              <div className="neu-card rounded-[24px] p-5 space-y-4">
+                <div className="border-b border-[var(--border-subtle)] pb-2">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Top 10 Prescribed Pharmaceutical Formulations
+                  </h3>
+                </div>
+
+                <div className="space-y-2.5">
+                  {analyticsData.topMedicines.slice(0, 10).map((m, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold text-[var(--text-primary)]">
+                        <span className="truncate">{idx + 1}. {m.label}</span>
+                        <span className="font-mono text-[var(--accent-text)] shrink-0 font-bold">
+                          {m.value.toLocaleString()} rx
+                        </span>
+                      </div>
+                      <div className="w-full bg-[var(--surface-muted)] h-2 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500 ease-out"
+                          style={{
+                            width: `${Math.max(4, (m.value / maxMedVal) * 100)}%`,
+                            backgroundColor: 'var(--chart-4)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Formulations & Frequency Breakdown */}
+              <div className="space-y-6">
+                <div className="neu-card rounded-[24px] p-5 space-y-3">
+                  <div className="border-b border-[var(--border-subtle)] pb-2">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                      Prescribed Dosage Forms
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {analyticsData.medicineFormulations.map((f, idx) => (
+                      <div key={idx} className="p-3.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] text-center">
+                        <div className="text-base font-bold text-[var(--accent-primary)] font-mono">{f.percentage}%</div>
+                        <div className="text-xs font-bold text-[var(--text-primary)] truncate">{f.label.split(' ')[0]}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono">{f.value.toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dosage Frequency */}
+                <div className="neu-card rounded-[24px] p-5 space-y-3">
+                  <div className="border-b border-[var(--border-subtle)] pb-2">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                      Dosage Frequency Patterns
+                    </h3>
+                  </div>
+
+                  <div className="space-y-2">
+                    {analyticsData.dosageFrequencies.map((df, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs font-semibold text-[var(--text-secondary)] border-b border-[var(--border-subtle)] pb-1.5">
+                        <span>{df.label}</span>
+                        <span className="font-mono text-[var(--text-primary)] font-bold">
+                          {df.percentage}% ({df.value.toLocaleString()} rx)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })()}
 
       {/* TAB CONTENT: SECTION 5 - CERTIFICATES */}
       {activeSection === 'certificates' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <motion.div
+          key="section-certificates"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-6"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
+            <div className="neu-card rounded-[24px] p-5 space-y-4">
+              <div className="border-b border-[var(--border-subtle)] pb-2">
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Certificates by Classification (2,709 Records)
+                  Certificates by Classification ({analyticsData.certificatesByType.reduce((s, c) => s + c.value, 0).toLocaleString()} in range)
                 </h3>
               </div>
 
               <div className="space-y-3">
                 {analyticsData.certificatesByType.map((c, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
+                  <div key={idx} className="p-3.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
                     <div className="flex justify-between items-center text-xs font-bold text-[var(--text-primary)]">
                       <span>{c.label}</span>
                       <span className="font-mono text-[var(--accent-text)]">{c.percentage}%</span>
                     </div>
                     <div className="text-[11px] text-[var(--text-muted)] font-mono">
-                      {c.value} certificates issued
+                      {c.value.toLocaleString()} certificates issued
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-              <div className="border-b border-[var(--border)] pb-2">
+            <div className="neu-card rounded-[24px] p-5 space-y-4">
+              <div className="border-b border-[var(--border-subtle)] pb-2">
                 <h3 className="text-sm font-bold text-[var(--text-primary)]">
                   Medical Leave Rest Duration Breakdown
                 </h3>
@@ -640,32 +830,38 @@ export const ReportsView: React.FC = () => {
 
               <div className="space-y-3">
                 {analyticsData.certificatesByDuration.map((d, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
+                  <div key={idx} className="p-3.5 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
                     <div className="flex justify-between items-center text-xs font-bold text-[var(--text-primary)]">
                       <span>{d.label}</span>
                       <span className="font-mono text-[var(--accent-text)]">{d.percentage}%</span>
                     </div>
                     <div className="text-[11px] text-[var(--text-muted)] font-mono">
-                      {d.value} certificates
+                      {d.value.toLocaleString()} certificates
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* TAB CONTENT: SECTION 6 - AGE-LINKED PATHOLOGY */}
       {activeSection === 'age-patterns' && (
-        <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-2xs space-y-4">
-            <div className="border-b border-[var(--border)] pb-2">
+        <motion.div
+          key="section-age-patterns"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="space-y-6"
+        >
+          <div className="neu-card rounded-[24px] p-5 space-y-4">
+            <div className="border-b border-[var(--border-subtle)] pb-2">
               <h3 className="text-sm font-bold text-[var(--text-primary)]">
                 Age Group × Top Diagnosis Matrix (Epidemiological Correlation)
               </h3>
               <p className="text-[11px] text-[var(--text-muted)]">
-                Computed against current calculated patient ages
+                Computed against current calculated patient ages ({analyticsData.activeDateRangeLabel})
               </p>
             </div>
 
@@ -673,15 +869,15 @@ export const ReportsView: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="bg-[var(--surface-muted)] text-[11px] font-bold text-[var(--text-muted)] uppercase">
                   <tr>
-                    <th className="p-3">Age Cohort</th>
+                    <th className="p-3 rounded-l-xl">Age Cohort</th>
                     <th className="p-3">Predominant Diagnosis</th>
                     <th className="p-3 text-right">Cohort Cases</th>
-                    <th className="p-3 text-right">Prevalence</th>
+                    <th className="p-3 text-right rounded-r-xl">Prevalence</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border)]">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {analyticsData.ageGroupVsDiagnoses.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-[var(--surface-muted)]/50">
+                    <tr key={idx} className="hover:bg-[var(--surface-muted)]/50 transition-colors">
                       <td className="p-3 font-bold text-[var(--text-primary)]">{row.ageGroup}</td>
                       <td className="p-3 font-medium text-[var(--text-secondary)]">{row.topDiagnosis}</td>
                       <td className="p-3 text-right font-mono text-[var(--text-primary)]">{row.count.toLocaleString()}</td>
@@ -692,7 +888,7 @@ export const ReportsView: React.FC = () => {
               </table>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
