@@ -34,6 +34,8 @@ interface HeaderProps {
   clinicDate?: string;
   settings?: ClinicSettings;
   sidebarMode?: 'expanded' | 'icon-rail' | 'hidden';
+  isMobile?: boolean;
+  isMobileMenuOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -47,6 +49,8 @@ export const Header: React.FC<HeaderProps> = ({
   clinicDate = '2026-08-12',
   settings,
   sidebarMode = 'expanded',
+  isMobile = false,
+  isMobileMenuOpen = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isRemindersOpen, setIsRemindersOpen] = useState(false);
@@ -97,6 +101,12 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, [isRemindersOpen]);
 
+  useEffect(() => {
+    if (isMobileMenuOpen && isRemindersOpen) {
+      setIsRemindersOpen(false);
+    }
+  }, [isMobileMenuOpen, isRemindersOpen]);
+
   const formattedDate = useMemo(() => {
     try {
       const d = new Date(clinicDate + 'T00:00:00');
@@ -146,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
     setActiveBannerIdx(0);
   };
 
-  const isMenuOpen = sidebarMode === 'expanded';
+  const isMenuOpen = isMobile ? Boolean(isMobileMenuOpen) : sidebarMode === 'expanded';
 
   const doctorInitials = useMemo(() => {
     const name = (settings?.doctorName || 'Dr. Marcus Johnson')
@@ -185,13 +195,17 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <div className="shrink-0 z-30">
-      <header className="h-[62px] px-4 sm:px-6 flex items-center justify-between gap-3 select-none border-b border-[var(--border-subtle)]/70 relative">
-        {/* Left: 3-Line Hamburger Menu Button <-> Red-Pink X Close Button */}
-        <div className="flex items-center gap-3 min-w-0">
+    <div className="shrink-0 relative z-30">
+      <header className="h-[64px] lg:h-[62px] px-3 sm:px-6 flex items-center justify-between gap-2.5 sm:gap-3 select-none border-b border-[var(--border-subtle)]/70 relative bg-[var(--bg-primary)]/95 backdrop-blur-sm">
+        {/* Left: Touch-Optimized 3-Line Hamburger Menu Button <-> Red-Pink X Close Button */}
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             id="header-sidebar-toggle-btn"
-            onClick={onToggleSidebar}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSidebar();
+            }}
             style={
               isMenuOpen
                 ? {
@@ -202,7 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }
                 : undefined
             }
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition-all duration-250 ease-out active:scale-95 border ${
+            className={`min-w-[44px] min-h-[44px] w-11 h-11 lg:min-w-[40px] lg:min-h-[40px] lg:w-10 lg:h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer touch-manipulation select-none transition-all duration-200 ease-out active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 border ${
               isMenuOpen
                 ? 'hover:brightness-95'
                 : 'neu-pill-btn text-[var(--text-primary)] hover:text-[var(--accent-primary)]'
@@ -210,11 +224,13 @@ export const Header: React.FC<HeaderProps> = ({
             title={isMenuOpen ? 'Close Side Menu' : 'Open Side Menu'}
             aria-label={isMenuOpen ? 'Close Side Menu' : 'Open Side Menu'}
             aria-expanded={isMenuOpen}
+            aria-controls="app-primary-sidebar"
+            aria-haspopup={isMobile ? 'dialog' : undefined}
           >
             {isMenuOpen ? (
-              <X className="w-[18px] h-[18px] stroke-[2.4] transition-transform duration-200 rotate-0" />
+              <X className="w-5 h-5 lg:w-[18px] lg:h-[18px] stroke-[2.4] transition-transform duration-200 rotate-0" />
             ) : (
-              <Menu className="w-[18px] h-[18px] stroke-[2.2] transition-transform duration-200" />
+              <Menu className="w-5 h-5 lg:w-[18px] lg:h-[18px] stroke-[2.2] transition-transform duration-200" />
             )}
           </button>
 
@@ -279,7 +295,7 @@ export const Header: React.FC<HeaderProps> = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 6, scale: 0.97 }}
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute right-0 mt-2.5 w-[330px] sm:w-[395px] rounded-[22px] bg-[var(--surface-elevated)] border border-[var(--border)] shadow-2xl overflow-hidden z-50"
+                  className="absolute right-0 mt-2.5 w-[min(calc(100vw-1.5rem),395px)] rounded-[22px] bg-[var(--surface-elevated)] border border-[var(--border)] shadow-2xl overflow-hidden z-40"
                 >
                   <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between gap-2 bg-[var(--surface-muted)]/60">
                     <div>

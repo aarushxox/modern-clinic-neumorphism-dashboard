@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Palette,
   Sliders,
@@ -13,9 +13,21 @@ import {
   CheckCircle2,
   FileCheck2,
   Sparkles,
+  Clock,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { ClinicSettings, ClinicTheme } from '../types/clinic';
 import { useToast } from '../components/Toast';
+import {
+  DEFAULT_DAY_START_HOUR,
+  DEFAULT_NIGHT_START_HOUR,
+  formatLocalClock,
+  formatScheduleHour,
+  getNextScheduledSwitch,
+  normalizeScheduleHour,
+  resolveScheduledTheme,
+} from '../utils/themeSchedule';
 
 interface SettingsViewProps {
   settings: ClinicSettings;
@@ -100,7 +112,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<SettingsTab>('appearance');
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [currentClock, setCurrentClock] = useState<Date>(() => new Date());
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (activeTab !== 'appearance') return;
+    setCurrentClock(new Date());
+    const timer = window.setInterval(() => {
+      setCurrentClock(new Date());
+    }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [activeTab]);
 
   // Form local state for branding
   const [brandingForm, setBrandingForm] = useState({
@@ -112,12 +134,100 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     clinicPhone: settings.clinicPhone || '9839000000',
   });
 
+  const isAutoScheduleEnabled = Boolean(settings.autoScheduleDarkMode);
+  const dayStartHour = normalizeScheduleHour(
+    settings.autoScheduleDayHour,
+    DEFAULT_DAY_START_HOUR
+  );
+  const nightStartHour = normalizeScheduleHour(
+    settings.autoScheduleNightHour,
+    DEFAULT_NIGHT_START_HOUR
+  );
+  const scheduledTheme = resolveScheduledTheme(currentClock, dayStartHour, nightStartHour);
+  const isDayScheduleActive = scheduledTheme === 'sky-blue';
+  const nextSwitch = getNextScheduledSwitch(currentClock, dayStartHour, nightStartHour);
+  const scheduleHours = Array.from({ length: 24 }, (_, hour) => hour);
+
+  const handleToggleAutoSchedule = () => {
+    const nextEnabled = !isAutoScheduleEnabled;
+    if (nextEnabled) {
+      const targetTheme = resolveScheduledTheme(new Date(), dayStartHour, nightStartHour);
+      onUpdateSettings({
+        ...settings,
+        autoScheduleDarkMode: true,
+        autoScheduleDayHour: dayStartHour,
+        autoScheduleNightHour: nightStartHour,
+        theme: targetTheme,
+      });
+      showToast(
+        `Auto-Schedule enabled. Applied ${targetTheme} (${targetTheme === 'sky-blue' ? 'Day' : 'Night'}) from system clock.`,
+        'success',
+        'Auto-Schedule Dark Mode'
+      );
+    } else {
+      onUpdateSettings({
+        ...settings,
+        autoScheduleDarkMode: false,
+      });
+      showToast(
+        'Auto-Schedule Dark Mode disabled. Theme stays under manual control.',
+        'info',
+        'Auto-Schedule Paused'
+      );
+    }
+  };
+
+  const handleChangeScheduleHour = (
+    field: 'autoScheduleDayHour' | 'autoScheduleNightHour',
+    rawValue: string
+  ) => {
+    const parsedHour = Number.parseInt(rawValue, 10);
+    if (!Number.isFinite(parsedHour) || parsedHour < 0 || parsedHour > 23) return;
+
+    const nextDayHour = field === 'autoScheduleDayHour' ? parsedHour : dayStartHour;
+    const nextNightHour = field === 'autoScheduleNightHour' ? parsedHour : nightStartHour;
+
+    if (nextDayHour === nextNightHour) {
+      showToast(
+        'Day start and Night start hours must be different.',
+        'error',
+        'Invalid Schedule Window'
+      );
+      return;
+    }
+
+    const updatedSettings: ClinicSettings = {
+      ...settings,
+      autoScheduleDayHour: nextDayHour,
+      autoScheduleNightHour: nextNightHour,
+    };
+
+    if (isAutoScheduleEnabled) {
+      updatedSettings.theme = resolveScheduledTheme(new Date(), nextDayHour, nextNightHour);
+    }
+
+    onUpdateSettings(updatedSettings);
+    showToast(
+      `Schedule updated: Day (sky-blue) ${formatScheduleHour(nextDayHour)} · Night (midnight-clinical) ${formatScheduleHour(nextNightHour)}`,
+      'success',
+      'Schedule Updated'
+    );
+  };
+
   const handleSelectTheme = (themeId: ClinicTheme) => {
+    const wasAutoScheduled = Boolean(settings.autoScheduleDarkMode);
     onUpdateSettings({
       ...settings,
       theme: themeId,
+      autoScheduleDarkMode: false,
     });
-    showToast(`Switched theme to ${themeId}`, 'success', 'Theme Updated');
+    showToast(
+      wasAutoScheduled
+        ? `Switched theme to ${themeId} and paused Auto-Schedule Dark Mode.`
+        : `Switched theme to ${themeId}`,
+      'success',
+      'Theme Updated'
+    );
   };
 
   const handleSaveBranding = (e: React.FormEvent) => {
@@ -297,8 +407,159 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   Appearance & Clinical Color Themes
                 </h3>
                 <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                  Choose from 8 specialized themes (6 clean Light themes and 2 low-strain Dark themes).
+                  Choose from 8 specialized themes (6 clean Light themes and 2 low-strain Dark themes) or enable clock-based automatic switching.
                 </p>
+              </div>
+
+              {/* Auto-Schedule Dark Mode Control Card */}
+              <div
+                id="auto-schedule-dark-mode-card"
+                className="p-4 sm:p-5 rounded-[20px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-4"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-10 h-10 rounded-[14px] flex items-center justify-center shrink-0 border border-[var(--border)] bg-[var(--surface-elevated)]"
+                      style={{ color: 'var(--accent-primary)' }}
+                    >
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)]">
+                          Auto-Schedule Dark Mode
+                        </h4>
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            isAutoScheduleEnabled ? 'badge-sage' : 'badge-neutral'
+                          }`}
+                        >
+                          {isAutoScheduleEnabled ? 'Active' : 'Off'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        Automatically switches between <span className="font-semibold text-[var(--text-primary)]">sky-blue</span> (day) and{' '}
+                        <span className="font-semibold text-[var(--text-primary)]">midnight-clinical</span> (night) using your system clock.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    id="auto-schedule-dark-mode-toggle"
+                    type="button"
+                    role="switch"
+                    aria-checked={isAutoScheduleEnabled}
+                    aria-label="Toggle Auto-Schedule Dark Mode"
+                    onClick={handleToggleAutoSchedule}
+                    className={`w-12 h-6 rounded-full transition-colors relative flex items-center px-0.5 cursor-pointer shrink-0 self-start sm:self-center ${
+                      isAutoScheduleEnabled ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border)]'
+                    }`}
+                  >
+                    <span
+                      className={`w-5 h-5 rounded-full bg-[var(--surface-elevated)] shadow-sm transition-transform ${
+                        isAutoScheduleEnabled ? 'translate-x-6' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Day / Night Window Selectors */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
+                  <div className="p-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
+                        style={{
+                          background: 'var(--pastel-sand-bg)',
+                          color: 'var(--pastel-sand-fg)',
+                        }}
+                      >
+                        <Sun className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="auto-schedule-day-hour"
+                          className="text-xs font-bold text-[var(--text-primary)] block"
+                        >
+                          Day Theme Start
+                        </label>
+                        <span className="text-[10.5px] text-[var(--text-muted)] font-mono">
+                          sky-blue
+                        </span>
+                      </div>
+                    </div>
+                    <select
+                      id="auto-schedule-day-hour"
+                      value={dayStartHour}
+                      onChange={(e) => handleChangeScheduleHour('autoScheduleDayHour', e.target.value)}
+                      className="px-2.5 py-1.5 text-xs font-semibold rounded-[10px] border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] cursor-pointer"
+                    >
+                      {scheduleHours.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {formatScheduleHour(hour)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="p-3 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
+                        style={{
+                          background: 'var(--pastel-lilac-bg)',
+                          color: 'var(--pastel-lilac-fg)',
+                        }}
+                      >
+                        <Moon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="auto-schedule-night-hour"
+                          className="text-xs font-bold text-[var(--text-primary)] block"
+                        >
+                          Night Theme Start
+                        </label>
+                        <span className="text-[10.5px] text-[var(--text-muted)] font-mono">
+                          midnight-clinical
+                        </span>
+                      </div>
+                    </div>
+                    <select
+                      id="auto-schedule-night-hour"
+                      value={nightStartHour}
+                      onChange={(e) => handleChangeScheduleHour('autoScheduleNightHour', e.target.value)}
+                      className="px-2.5 py-1.5 text-xs font-semibold rounded-[10px] border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] cursor-pointer"
+                    >
+                      {scheduleHours.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {formatScheduleHour(hour)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Live System Clock & Next Transition Status Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-secondary)] pt-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-[var(--text-primary)]">
+                      System Clock: {formatLocalClock(currentClock)}
+                    </span>
+                    <span className="text-[var(--text-muted)]">|</span>
+                    <span>
+                      Current Slot:{' '}
+                      <span className="font-semibold text-[var(--text-primary)]">
+                        {isDayScheduleActive ? 'Day (sky-blue)' : 'Night (midnight-clinical)'}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="text-[var(--text-muted)]">
+                    {isAutoScheduleEnabled
+                      ? `Next automatic switch: ${nextSwitch.nextTheme} at ${nextSwitch.timeLabel}`
+                      : 'Selecting any theme card below applies it manually'}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

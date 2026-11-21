@@ -22,6 +22,11 @@ import { SettingsView } from './views/SettingsView';
 import { AboutView } from './views/AboutView';
 import { ToastProvider, useToast } from './components/Toast';
 import { ActiveModule, PatientRecord, ClinicSettings } from './types/clinic';
+import {
+  DEFAULT_DAY_START_HOUR,
+  DEFAULT_NIGHT_START_HOUR,
+  resolveScheduledTheme,
+} from './utils/themeSchedule';
 
 const PAGE_SKELETON_MS = 800;
 
@@ -38,6 +43,9 @@ const DEFAULT_SETTINGS: ClinicSettings = {
   navOrientation: 'vertical',
   collapsedBehavior: 'half-close',
   sidebarAppearance: 'follow-theme',
+  autoScheduleDarkMode: false,
+  autoScheduleDayHour: DEFAULT_DAY_START_HOUR,
+  autoScheduleNightHour: DEFAULT_NIGHT_START_HOUR,
 };
 
 const MODULE_NAMES: Record<ActiveModule, string> = {
@@ -65,8 +73,13 @@ function AppContent() {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState<boolean>(false);
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState<boolean>(false);
   const [sidebarMode, setSidebarMode] = useState<'expanded' | 'icon-rail' | 'hidden'>('icon-rail');
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 1023px)').matches : false
+  );
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [selectedClinicDate, setSelectedClinicDate] = useState<string>('2026-08-12');
   const [quickSearchQuery, setQuickSearchQuery] = useState<string>('');
+  const [quickAgeCohortFilter, setQuickAgeCohortFilter] = useState<string>('ALL');
 
   const [settings, setSettings] = useState<ClinicSettings>(() => {
     try {
@@ -84,6 +97,13 @@ function AppContent() {
           migrated.regNumber = DEFAULT_SETTINGS.regNumber;
         }
         migrated.sidebarMode = migrated.collapsedBehavior === 'full-close' ? 'hidden' : 'icon-rail';
+        if (migrated.autoScheduleDarkMode) {
+          migrated.theme = resolveScheduledTheme(
+            new Date(),
+            migrated.autoScheduleDayHour,
+            migrated.autoScheduleNightHour
+          );
+        }
         return migrated;
       }
     } catch {
@@ -99,6 +119,48 @@ function AppContent() {
     document.documentElement.classList.toggle('dark', isDark);
   }, [settings.theme]);
 
+  useEffect(() => {
+    if (!settings.autoScheduleDarkMode) return;
+
+    const syncThemeWithClock = () => {
+      const scheduledTheme = resolveScheduledTheme(
+        new Date(),
+        settings.autoScheduleDayHour,
+        settings.autoScheduleNightHour
+      );
+
+      setSettings((prev) => {
+        if (!prev.autoScheduleDarkMode || prev.theme === scheduledTheme) {
+          return prev;
+        }
+        const updated: ClinicSettings = {
+          ...prev,
+          theme: scheduledTheme,
+        };
+        try {
+          localStorage.setItem('jsp_clinic_settings', JSON.stringify(updated));
+        } catch (e) {
+          console.error('Failed to persist auto-scheduled theme', e);
+        }
+        return updated;
+      });
+    };
+
+    syncThemeWithClock();
+    const intervalId = window.setInterval(syncThemeWithClock, 30_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncThemeWithClock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [settings.autoScheduleDarkMode, settings.autoScheduleDayHour, settings.autoScheduleNightHour]);
+
   const isFirstSidebarSync = useRef(true);
   useEffect(() => {
     if (isFirstSidebarSync.current) {
@@ -107,6 +169,27 @@ function AppContent() {
     }
     setSidebarMode(settings.sidebarMode);
   }, [settings.sidebarMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const handleViewportChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      const mobileNow = e.matches;
+      setIsMobile(mobileNow);
+      if (!mobileNow) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    handleViewportChange(mq);
+    mq.addEventListener('change', handleViewportChange);
+    return () => mq.removeEventListener('change', handleViewportChange);
+  }, []);
+
+  useEffect(() => {
+    if (isPatientModalOpen || isDemoGuideOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isPatientModalOpen, isDemoGuideOpen]);
 
   useEffect(() => {
     setIsPageLoading(true);
@@ -138,6 +221,10 @@ function AppContent() {
         }
         if (isDemoGuideOpen) {
           setIsDemoGuideOpen(false);
+          return;
+        }
+        if (isMobileMenuOpen) {
+          setIsMobileMenuOpen(false);
           return;
         }
       }
@@ -201,7 +288,7 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPatientModalOpen, isDemoGuideOpen, showToast]);
+  }, [isPatientModalOpen, isDemoGuideOpen, isMobileMenuOpen, showToast]);
 
   const handleUpdateSettings = (newSettings: ClinicSettings) => {
     setSettings(newSettings);
@@ -227,6 +314,10 @@ function AppContent() {
   };
 
   const handleToggleSidebar = () => {
+    if (isMobile) {
+      setIsMobileMenuOpen((prev) => !prev);
+      return;
+    }
     if (settings.navOrientation === 'horizontal') {
       handleUpdateSettings({ ...settings, navOrientation: 'vertical', sidebarMode: 'expanded' });
       return;
@@ -241,17 +332,39 @@ function AppContent() {
 
   const handleQuickToggleDarkMode = () => {
     const isDark = settings.theme === 'night-galaxy' || settings.theme === 'midnight-clinical';
+    const nextTheme = isDark ? 'sky-blue' : 'midnight-clinical';
+    const wasAutoScheduled = Boolean(settings.autoScheduleDarkMode);
     handleUpdateSettings({
       ...settings,
-      theme: isDark ? 'sky-blue' : 'midnight-clinical',
+      theme: nextTheme,
+      autoScheduleDarkMode: false,
     });
+    if (wasAutoScheduled) {
+      showToast(
+        `Switched manually to ${nextTheme}. Auto-Schedule Dark Mode paused.`,
+        'info',
+        'Manual Theme Override'
+      );
+    }
   };
 
   const handleQuickSearch = (query?: string) => {
     if (typeof query === 'string') {
       setQuickSearchQuery(query);
     }
+    setQuickAgeCohortFilter('ALL');
     setActiveModule('search');
+  };
+
+  const handleFilterDirectoryByAge = (bracket: string) => {
+    setQuickSearchQuery('');
+    setQuickAgeCohortFilter(bracket);
+    setActiveModule('search');
+    showToast(
+      `Filtered Patients Directory to age cohort ${bracket} yrs.`,
+      'info',
+      'Age Cohort Filter Applied'
+    );
   };
 
   const handleNavigateToClinicDay = (dateStr: string) => {
@@ -259,13 +372,18 @@ function AppContent() {
     setActiveModule('today');
   };
 
+  const isMobileOverlayActive = isMobile && isMobileMenuOpen;
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex overflow-hidden transition-colors duration-200">
-      {/* Smooth Collapsible Sidebar (always mounted when vertical for silky open/close) */}
-      {settings.navOrientation !== 'horizontal' && (
+      {/* Smooth Collapsible Sidebar (desktop inline, mobile touch-optimized slide-over overlay) */}
+      {(settings.navOrientation !== 'horizontal' || isMobile) && (
         <Sidebar
           activeModule={activeModule}
-          onNavigate={(mod) => setActiveModule(mod)}
+          onNavigate={(mod) => {
+            setActiveModule(mod);
+            if (isMobile) setIsMobileMenuOpen(false);
+          }}
           mode={sidebarMode}
           hoverExpansion={settings.hoverExpansion}
           onCloseSidebar={handleToggleSidebar}
@@ -274,11 +392,19 @@ function AppContent() {
           }
           sidebarAppearance={settings.sidebarAppearance}
           settings={settings}
+          isMobile={isMobile}
+          isMobileOpen={isMobileMenuOpen}
+          onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* Main Content Column */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      {/* Main Content Column (isolated from pointer/touch clicks while mobile drawer is open) */}
+      <div
+        aria-hidden={isMobileOverlayActive || undefined}
+        className={`flex-1 flex flex-col min-w-0 h-screen overflow-hidden ${
+          isMobileOverlayActive ? 'pointer-events-none select-none' : ''
+        }`}
+      >
         <Header
           activeModule={activeModule}
           moduleTitle={MODULE_NAMES[activeModule]}
@@ -291,9 +417,11 @@ function AppContent() {
           clinicDate={selectedClinicDate}
           settings={settings}
           sidebarMode={sidebarMode}
+          isMobile={isMobile}
+          isMobileMenuOpen={isMobileMenuOpen}
         />
 
-        {settings.navOrientation === 'horizontal' && (
+        {settings.navOrientation === 'horizontal' && !isMobile && (
           <HorizontalNav
             activeModule={activeModule}
             onNavigate={(mod) => setActiveModule(mod)}
@@ -302,7 +430,9 @@ function AppContent() {
 
         <main
           ref={mainScrollRef}
-          className="flex-1 overflow-y-auto smooth-scroll-region px-4 sm:px-7 pb-10 pt-2"
+          className={`flex-1 smooth-scroll-region px-4 sm:px-7 pb-10 pt-2 ${
+            isMobileOverlayActive ? 'overflow-hidden' : 'overflow-y-auto'
+          }`}
         >
           <div className="max-w-[1440px] mx-auto w-full">
             <AnimatePresence mode="wait" initial={false}>
@@ -329,6 +459,7 @@ function AppContent() {
                       onNavigate={(mod) => setActiveModule(mod)}
                       onSelectPatient={handleSelectPatient}
                       onSelectClinicDate={handleNavigateToClinicDay}
+                      onFilterDirectoryByAge={handleFilterDirectoryByAge}
                       settings={settings}
                     />
                   )}
@@ -347,9 +478,11 @@ function AppContent() {
 
                   {activeModule === 'search' && (
                     <PatientSearchView
-                      key={quickSearchQuery}
+                      key={`${quickSearchQuery}-${quickAgeCohortFilter}`}
                       initialQuery={quickSearchQuery}
+                      initialAgeCohort={quickAgeCohortFilter}
                       onSelectPatient={handleSelectPatient}
+                      settings={settings}
                     />
                   )}
 
@@ -390,6 +523,7 @@ function AppContent() {
         patient={selectedPatient}
         isOpen={isPatientModalOpen}
         onClose={() => setIsPatientModalOpen(false)}
+        settings={settings}
       />
 
       {/* Walkthrough Guide Modal */}

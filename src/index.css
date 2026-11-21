@@ -769,6 +769,273 @@
     page-break-inside: avoid;
   }
 
+  /* When printing Daily Clinical Summary modal, hide background dashboard content cleanly */
+  body.printing-clinical-summary main > div > :not(.fixed) {
+    display: none !important;
+  }
+
+  body.printing-clinical-summary .clinical-summary-print {
+    display: block !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  /* Dedicated A4 Archival Patient History & Batch Summary PDF Print Sheets */
+  body.printing-patient-history #root,
+  body.printing-batch-summaries #root {
+    display: none !important;
+  }
+
+  body.printing-patient-history .patient-history-print-sheet,
+  body.printing-batch-summaries .batch-summaries-print-sheet {
+    display: block !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+  }
+
+  .patient-history-print-sheet .pdf-header-block,
+  .batch-summaries-print-sheet .pdf-header-block {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+    border-bottom: 2px solid #1e293b !important;
+  }
+
+  .patient-history-print-sheet .pdf-eyebrow,
+  .batch-summaries-print-sheet .pdf-eyebrow {
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.14em !important;
+    color: #475569 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .patient-history-print-sheet .pdf-clinic-title,
+  .batch-summaries-print-sheet .pdf-clinic-title {
+    font-size: 14pt !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 0 3px 0 !important;
+  }
+
+  .patient-history-print-sheet .pdf-clinic-meta,
+  .patient-history-print-sheet .pdf-doc-meta,
+  .batch-summaries-print-sheet .pdf-clinic-meta,
+  .batch-summaries-print-sheet .pdf-doc-meta {
+    font-size: 8.5pt !important;
+    color: #334155 !important;
+  }
+
+  .patient-history-print-sheet .pdf-doc-meta,
+  .batch-summaries-print-sheet .pdf-doc-meta {
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  .patient-history-print-sheet .pdf-section {
+    margin-bottom: 14px !important;
+  }
+
+  .patient-history-print-sheet .pdf-section-title {
+    font-size: 10.5pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #0f172a !important;
+    padding-bottom: 4px !important;
+    margin: 0 0 8px 0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  .patient-history-print-sheet .pdf-kv-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+  }
+
+  .patient-history-print-sheet .pdf-kv-table th,
+  .patient-history-print-sheet .pdf-kv-table td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 5px 8px !important;
+    text-align: left !important;
+    vertical-align: top !important;
+  }
+
+  .patient-history-print-sheet .pdf-kv-table th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    width: 18% !important;
+  }
+
+  .patient-history-print-sheet .pdf-alert-box {
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    padding: 7px 10px !important;
+    border-radius: 4px !important;
+    margin-bottom: 8px !important;
+    font-size: 9pt !important;
+  }
+
+  .patient-history-print-sheet .pdf-alert-danger {
+    border-color: #991b1b !important;
+    background: #fef2f2 !important;
+    color: #7f1d1d !important;
+  }
+
+  .patient-history-print-sheet .pdf-history-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .patient-history-print-sheet .pdf-box {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px 10px !important;
+    border-radius: 4px !important;
+    break-inside: avoid !important;
+  }
+
+  .patient-history-print-sheet .pdf-box-label {
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #475569 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .patient-history-print-sheet .pdf-list {
+    margin: 0 !important;
+    padding-left: 16px !important;
+    font-size: 8.8pt !important;
+  }
+
+  .patient-history-print-sheet .pdf-kpi-row {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .patient-history-print-sheet .pdf-kpi-cell {
+    border: 1px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    padding: 6px 8px !important;
+    border-radius: 4px !important;
+  }
+
+  .patient-history-print-sheet .pdf-kpi-value {
+    font-size: 11pt !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+  }
+
+  .patient-history-print-sheet .pdf-threshold-note {
+    font-size: 8pt !important;
+    color: #475569 !important;
+    margin: 0 0 8px 0 !important;
+  }
+
+  .patient-history-print-sheet thead,
+  .batch-summaries-print-sheet thead {
+    display: table-header-group !important;
+  }
+
+  .patient-history-print-sheet .pdf-encounter-card {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 10px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .patient-history-print-sheet .pdf-encounter-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    gap: 8px !important;
+    padding-bottom: 5px !important;
+    margin-bottom: 6px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 9.2pt !important;
+  }
+
+  .patient-history-print-sheet .pdf-encounter-dx {
+    color: #334155 !important;
+  }
+
+  .patient-history-print-sheet .pdf-encounter-fee {
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+  }
+
+  .patient-history-print-sheet .pdf-encounter-line {
+    font-size: 8.8pt !important;
+    margin-bottom: 5px !important;
+  }
+
+  .patient-history-print-sheet .pdf-rx-table {
+    margin: 6px 0 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .patient-history-print-sheet .pdf-encounter-footer-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin-top: 6px !important;
+    padding-top: 5px !important;
+    border-top: 1px dashed #cbd5e1 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .patient-history-print-sheet .pdf-archival-footer,
+  .batch-summaries-print-sheet .pdf-archival-footer {
+    margin-top: 18px !important;
+    padding-top: 10px !important;
+    border-top: 1.5px solid #334155 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 16px !important;
+    break-inside: avoid !important;
+  }
+
+  .patient-history-print-sheet .pdf-signature-block,
+  .batch-summaries-print-sheet .pdf-signature-block {
+    text-align: right !important;
+    min-width: 190px !important;
+  }
+
+  .patient-history-print-sheet .pdf-signature-line,
+  .batch-summaries-print-sheet .pdf-signature-line {
+    border-bottom: 1px solid #334155 !important;
+    height: 22px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .patient-history-print-sheet .pdf-footer-strong,
+  .batch-summaries-print-sheet .pdf-footer-strong {
+    font-weight: 700 !important;
+    font-size: 8.8pt !important;
+    color: #0f172a !important;
+  }
+
+  .patient-history-print-sheet .pdf-muted,
+  .batch-summaries-print-sheet .pdf-muted {
+    font-size: 8.2pt !important;
+    color: #475569 !important;
+    margin: 0 !important;
+  }
+
   @page {
     margin: 1.4cm;
     size: auto;

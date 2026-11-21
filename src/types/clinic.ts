@@ -15,6 +15,8 @@ export type ClinicTheme =
   | 'night-galaxy'
   | 'midnight-clinical';
 
+export type PatientClinicalStatus = 'Active' | 'Pending Review' | 'Discharged';
+
 export interface TableMetadata {
   tableName: string;
   role: TableRole;
@@ -143,6 +145,9 @@ export interface ClinicSettings {
   collapsedBehavior: 'half-close' | 'full-close';
   hoverExpansion: boolean;
   sidebarAppearance: 'follow-theme' | 'force-light' | 'force-dark';
+  autoScheduleDarkMode?: boolean;
+  autoScheduleDayHour?: number;
+  autoScheduleNightHour?: number;
   logoDataUrl?: string;
 }
 

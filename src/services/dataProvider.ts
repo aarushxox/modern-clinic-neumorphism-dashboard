@@ -13,6 +13,7 @@ import {
   CashbookRecord,
   TableMetadata,
   ClinicMetrics,
+  PatientClinicalStatus,
 } from '../types/clinic';
 import {
   TABLE_METADATA_REGISTRY,
@@ -27,8 +28,10 @@ import {
   getClinicDayEncounters,
 } from '../data/forensicDataset';
 import { formatPrescriptionTreatment } from '../data/krutiDevConverter';
+import { matchesConditionFilter } from '../utils/patientConditions';
 
 const QUICK_PATIENTS_KEY = 'johnson_clinic_quick_patients_v1';
+const PATIENT_STATUS_KEY = 'johnson_clinic_patient_statuses_v1';
 
 interface QuickAddedStore {
   patients: PatientRecord[];
@@ -58,6 +61,31 @@ function saveQuickStore(store: QuickAddedStore): void {
   }
 }
 
+function loadStatusOverrides(): Record<number, PatientClinicalStatus> {
+  try {
+    if (typeof localStorage === 'undefined') return {};
+    const raw = localStorage.getItem(PATIENT_STATUS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed as Record<number, PatientClinicalStatus>;
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return {};
+}
+
+function saveStatusOverrides(map: Record<number, PatientClinicalStatus>): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(PATIENT_STATUS_KEY, JSON.stringify(map));
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export interface QuickAddPatientInput {
   fullName: string;
   ageYears: number;
@@ -69,7 +97,8 @@ export interface QuickAddPatientInput {
 
 export interface PatientSearchFilter {
   query?: string;
-  sortBy?: 'serial-asc' | 'serial-desc' | 'name-asc' | 'name-desc' | 'recent-visit';
+  condition?: string;
+  sortBy?: 'serial-asc' | 'serial-desc' | 'name-asc' | 'name-desc' | 'recent-visit' | 'visits-desc';
   gender?: string;
   minAge?: number;
   maxAge?: number;
@@ -173,24 +202,74 @@ export class ClinicDataProvider {
     return list;
   }
 
-  // Search patients with multi-field search and ranking (PRD Section 20)
+  // Retrieve persisted patient clinical status override (if updated via bulk actions)
+  public static getPatientStatusOverride(sno: number): PatientClinicalStatus | null {
+    const map = loadStatusOverrides();
+    return map[sno] || null;
+  }
+
+  // Derive default clinical status for a patient when no explicit override exists
+  public static getPatientStatus(patient: PatientRecord): PatientClinicalStatus {
+    const override = ClinicDataProvider.getPatientStatusOverride(patient.sno);
+    if (override) return override;
+    if (patient.history && /hypertension|diabetes|dm/i.test(patient.history)) {
+      return 'Pending Review';
+    }
+    if (patient.sno % 5 === 0) {
+      return 'Discharged';
+    }
+    return 'Active';
+  }
+
+  // Batch update clinical status for multiple patients at once (persisted locally)
+  public static updatePatientStatusesBatch(
+    snos: number[],
+    status: PatientClinicalStatus
+  ): number {
+    if (snos.length === 0) return 0;
+    const map = loadStatusOverrides();
+    snos.forEach((sno) => {
+      map[sno] = status;
+    });
+    saveStatusOverrides(map);
+    return snos.length;
+  }
+
+  // Search patients with multi-field + Search by Condition filtering and ranking (PRD Section 20)
   public static searchPatients(
     filter: PatientSearchFilter,
     page: number = 1,
     pageSize: number = 25
   ): PaginatedResult<PatientRecord> {
     const q = (filter.query || '').trim().toLowerCase();
+    const condition = (filter.condition || '').trim();
+    const hasCondition = Boolean(condition && condition.toLowerCase() !== 'all');
+    const genderFilter = filter.gender && filter.gender !== 'ALL' ? filter.gender : null;
     const store = loadQuickStore();
 
-    // If empty query, show recently active patients (including quick-added ones first)
-    if (!q) {
-      const recentPool: PatientRecord[] = [...store.patients];
-      for (let s = 52533; s >= 52200; s -= 7) {
+    const matchesGender = (p: PatientRecord) => !genderFilter || p.sex === genderFilter;
+
+    // If both query and condition are empty, return recently active patients (including quick-added ones first)
+    if (!q && !hasCondition) {
+      const recentPool: PatientRecord[] = [...store.patients.filter(matchesGender)];
+      for (let s = 52533; s >= 51400; s -= 7) {
         const p = getPatientBySerial(s);
-        if (p) {
+        if (p && matchesGender(p)) {
           recentPool.push(p);
-          if (recentPool.length >= 50) break;
+          if (recentPool.length >= 120) break;
         }
+      }
+
+      if (filter.sortBy === 'name-asc') {
+        recentPool.sort((a, b) => a.firstName.localeCompare(b.firstName));
+      } else if (filter.sortBy === 'name-desc') {
+        recentPool.sort((a, b) => b.firstName.localeCompare(a.firstName));
+      } else if (filter.sortBy === 'serial-asc') {
+        recentPool.sort((a, b) => a.sno - b.sno);
+      } else if (filter.sortBy === 'visits-desc') {
+        recentPool.sort((a, b) => b.totalVisits - a.totalVisits);
+      } else {
+        recentPool.sort((a, b) => b.sno - a.sno);
       }
 
       const totalCount = CLINIC_METRICS.currentPatientsCount + store.patients.length;
@@ -206,46 +285,49 @@ export class ClinicDataProvider {
       };
     }
 
-    // If query is an exact or partial serial number
-    const numericMatch = parseInt(q, 10);
+    const numericMatch = q ? parseInt(q, 10) : NaN;
     const matches: PatientRecord[] = [];
+    const seen = new Set<number>();
+
+    const matchesTextQuery = (p: PatientRecord): boolean => {
+      if (!q) return true;
+      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+      return (
+        fullName.includes(q) ||
+        p.guardianName.toLowerCase().includes(q) ||
+        p.phone.includes(q) ||
+        p.address.toLowerCase().includes(q) ||
+        p.sno.toString().includes(q)
+      );
+    };
+
+    const matchesCondition = (p: PatientRecord): boolean => {
+      if (!hasCondition) return true;
+      const visits = ClinicDataProvider.getPatientVisits(p);
+      return matchesConditionFilter(p, visits, condition);
+    };
+
+    const consider = (p: PatientRecord | null) => {
+      if (!p || seen.has(p.sno)) return;
+      if (!matchesGender(p)) return;
+      if (!matchesTextQuery(p)) return;
+      if (!matchesCondition(p)) return;
+      seen.add(p.sno);
+      matches.push(p);
+    };
 
     // Search quick-added patients first
     for (const p of store.patients) {
-      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
-      if (
-        fullName.includes(q) ||
-        p.phone.includes(q) ||
-        p.sno.toString().includes(q) ||
-        p.address.toLowerCase().includes(q)
-      ) {
-        matches.push(p);
-      }
+      consider(p);
     }
 
     if (!isNaN(numericMatch) && numericMatch > 0 && numericMatch <= 52533) {
-      const exact = getPatientBySerial(numericMatch);
-      if (exact && !matches.some((m) => m.sno === exact.sno)) matches.push(exact);
+      consider(getPatientBySerial(numericMatch));
     }
 
-    const scanStep = q.length > 3 ? 31 : 53;
-    for (let sno = 1; sno <= 52533; sno += scanStep) {
-      const p = getPatientBySerial(sno);
-      if (!p) continue;
-
-      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
-      const matchName = fullName.includes(q);
-      const matchGuardian = p.guardianName.toLowerCase().includes(q);
-      const matchPhone = p.phone.includes(q);
-      const matchAddress = p.address.toLowerCase().includes(q);
-      const matchSno = p.sno.toString().includes(q);
-
-      if (matchName || matchGuardian || matchPhone || matchAddress || matchSno) {
-        if (!matches.some((m) => m.sno === p.sno)) {
-          matches.push(p);
-        }
-      }
-
+    const scanStep = hasCondition && !q ? 19 : q.length > 3 ? 31 : 53;
+    for (let sno = 52533; sno >= 1; sno -= scanStep) {
+      consider(getPatientBySerial(sno));
       if (matches.length >= 150) break;
     }
 
@@ -253,10 +335,12 @@ export class ClinicDataProvider {
       matches.sort((a, b) => a.firstName.localeCompare(b.firstName));
     } else if (filter.sortBy === 'name-desc') {
       matches.sort((a, b) => b.firstName.localeCompare(a.firstName));
-    } else if (filter.sortBy === 'serial-desc') {
-      matches.sort((a, b) => b.sno - a.sno);
-    } else {
+    } else if (filter.sortBy === 'serial-asc') {
       matches.sort((a, b) => a.sno - b.sno);
+    } else if (filter.sortBy === 'visits-desc') {
+      matches.sort((a, b) => b.totalVisits - a.totalVisits);
+    } else {
+      matches.sort((a, b) => b.sno - a.sno);
     }
 
     const totalCount = matches.length;

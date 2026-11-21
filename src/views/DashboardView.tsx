@@ -22,6 +22,9 @@ import {
   Phone,
   User,
   Download,
+  FileText,
+  X,
+  CheckSquare,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -34,16 +37,38 @@ import {
 } from 'recharts';
 import { motion } from 'motion/react';
 import { Modal } from '../components/Modal';
+import { DailyClinicalSummaryModal } from '../components/DailyClinicalSummaryModal';
+import {
+  BatchPatientSummaryPrintSheet,
+  BatchSummaryPatientRow,
+} from '../components/BatchPatientSummaryPrintSheet';
+import {
+  DailyAppointmentsWidget,
+  DailyAppointmentItem,
+} from '../components/DailyAppointmentsWidget';
+import {
+  PatientDemographicsChart,
+  DemographicAgeBracket,
+  matchesAgeBracket,
+} from '../components/PatientDemographicsChart';
 import { useToast } from '../components/Toast';
+import { useClinicalVitalsMonitor } from '../hooks/useClinicalVitalsMonitor';
+import { CLINICAL_VITALS_THRESHOLDS } from '../constants/clinicalConstants';
 import { ClinicDataProvider } from '../services/dataProvider';
 import { AnalyticsService } from '../services/analyticsService';
-import { ActiveModule, ClinicSettings, PatientRecord } from '../types/clinic';
+import {
+  ActiveModule,
+  ClinicSettings,
+  PatientClinicalStatus,
+  PatientRecord,
+} from '../types/clinic';
 import { computeCurrentAge } from '../utils/clinicalCalculations';
 
 interface DashboardViewProps {
   onNavigate: (module: ActiveModule) => void;
   onSelectPatient: (patient: PatientRecord) => void;
   onSelectClinicDate?: (dateStr: string) => void;
+  onFilterDirectoryByAge?: (bracket: DemographicAgeBracket) => void;
   settings?: ClinicSettings;
 }
 
@@ -66,6 +91,8 @@ function buildPatientVitalsSparkline(
   points: SparklinePoint[];
   latestHr: number;
   latestBp: string;
+  latestSystolic: number;
+  latestDiastolic: number;
   isElevated: boolean;
 } {
   const visits = patient ? ClinicDataProvider.getPatientVisits(patient).slice(0, 6).reverse() : [];
@@ -106,12 +133,18 @@ function buildPatientVitalsSparkline(
   }
 
   const latest = points[points.length - 1];
-  const isElevated = latest.bp >= 140 || latest.hr >= 96;
+  const isElevated =
+    latest.bp >= CLINICAL_VITALS_THRESHOLDS.systolic.maxSafe ||
+    latest.dia >= CLINICAL_VITALS_THRESHOLDS.diastolic.maxSafe ||
+    latest.hr > CLINICAL_VITALS_THRESHOLDS.pulse.maxSafe ||
+    latest.hr < CLINICAL_VITALS_THRESHOLDS.pulse.minSafe;
 
   return {
     points,
     latestHr: latest.hr,
     latestBp: `${latest.bp}/${latest.dia}`,
+    latestSystolic: latest.bp,
+    latestDiastolic: latest.dia,
     isElevated,
   };
 }
@@ -162,6 +195,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigate,
   onSelectPatient,
   onSelectClinicDate,
+  onFilterDirectoryByAge,
   settings,
 }) => {
   const { showToast } = useToast();
@@ -170,10 +204,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [selectedScheduleDate, setSelectedScheduleDate] = useState<string>('2026-08-12');
   const [patientStatusFilter, setPatientStatusFilter] =
     useState<PatientStatusFilter>('ALL');
+  const [selectedAgeBracket, setSelectedAgeBracket] =
+    useState<DemographicAgeBracket | null>(null);
   const [activityFilter, setActivityFilter] =
     useState<ActivityCategoryFilter>('ALL');
   const [sparklineMetric, setSparklineMetric] = useState<SparklineMetric>('hr');
   const [refreshTick, setRefreshTick] = useState<number>(0);
+  const [isClinicalSummaryOpen, setIsClinicalSummaryOpen] = useState<boolean>(false);
+  const [selectedPatientSnos, setSelectedPatientSnos] = useState<Set<number>>(new Set());
+  const [dashboardBatchStatus, setDashboardBatchStatus] =
+    useState<PatientClinicalStatus>('Pending Review');
 
   // Quick Add Patient FAB Modal state
   const [isQuickAddOpen, setIsQuickAddOpen] = useState<boolean>(false);
@@ -247,20 +287,159 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     () =>
       dayEncounters.map((rx, idx) => {
         const patient = ClinicDataProvider.getPatient(rx.sno);
+        const persistedStatus = ClinicDataProvider.getPatientStatusOverride(rx.sno);
         return {
           rx,
-          status: deriveEncounterStatus(rx.diagonisis, idx),
+          status: persistedStatus ?? deriveEncounterStatus(rx.diagonisis, idx),
           patient,
           vitals: buildPatientVitalsSparkline(patient, rx),
         };
       }),
-    [dayEncounters]
+    [dayEncounters, refreshTick]
   );
 
+  // Monitor incoming daily clinical vitals against safe BP / Pulse thresholds
+  const incomingVitalsBatch = useMemo(
+    () =>
+      enrichedEncounters.map(({ rx, patient, vitals }) => ({
+        id: rx.id,
+        patientSno: rx.sno,
+        patientName:
+          rx.patientName ||
+          (patient ? `${patient.firstName} ${patient.lastName}` : `Patient #${rx.sno}`),
+        date: rx.date,
+        examination: rx.examination,
+        systolic: vitals.latestSystolic,
+        diastolic: vitals.latestDiastolic,
+        pulse: vitals.latestHr,
+      })),
+    [enrichedEncounters]
+  );
+
+  useClinicalVitalsMonitor(incomingVitalsBatch, {
+    scopeKey: `dashboard-${selectedScheduleDate}`,
+    enabled: true,
+    maxToastsPerBatch: 1,
+  });
+
+  const dailySummaryEntries = useMemo(
+    () =>
+      enrichedEncounters.map(({ rx, status, patient, vitals }) => ({
+        rx,
+        status,
+        patient,
+        latestHr: vitals.latestHr,
+        latestBp: vitals.latestBp,
+        latestSystolic: vitals.latestSystolic,
+        latestDiastolic: vitals.latestDiastolic,
+      })),
+    [enrichedEncounters]
+  );
+
+  const dailyAppointments: DailyAppointmentItem[] = useMemo(() => {
+    let upcomingCounter = 0;
+    return enrichedEncounters.map(({ rx, status, patient }, idx) => {
+      const totalMinutes = 9 * 60 + 30 + idx * 20;
+      const hours24 = Math.floor(totalMinutes / 60) % 24;
+      const minutes = totalMinutes % 60;
+      const period = hours24 >= 12 ? 'PM' : 'AM';
+      const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+      const computedSlot = `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(
+        2,
+        '0'
+      )} ${period}`;
+
+      let queueState: DailyAppointmentItem['queueState'];
+      if (status === 'Discharged') {
+        queueState = 'Checked In';
+      } else {
+        queueState = upcomingCounter < 2 ? 'Arriving Soon' : 'Upcoming';
+        upcomingCounter += 1;
+      }
+
+      const computedAge = patient ? computeCurrentAge(patient).currentAge : null;
+      const ageSexLabel =
+        computedAge !== null && patient ? `${computedAge}y ${patient.sex}` : '';
+
+      return {
+        id: `appt-${rx.id}`,
+        sno: rx.sno,
+        patientName:
+          rx.patientName ||
+          (patient ? `${patient.firstName} ${patient.lastName}` : `Patient #${rx.sno}`),
+        phone: patient?.phone || '98390-00000',
+        timeSlot: rx.time || computedSlot,
+        diagnosis: rx.diagonisis,
+        queueState,
+        ageSexLabel,
+        patient,
+      };
+    });
+  }, [enrichedEncounters]);
+
+  const handleCallAppointment = (appt: DailyAppointmentItem) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard && appt.phone) {
+      navigator.clipboard.writeText(appt.phone).catch(() => {
+        // clipboard permission may be unavailable in restricted frames
+      });
+    }
+    showToast(
+      `Dialing ${appt.patientName} at ${appt.phone} (${appt.timeSlot} slot). Number copied for quick dial.`,
+      'info',
+      'Outbound Call Ready'
+    );
+  };
+
+  const handleNotifyAppointment = (appt: DailyAppointmentItem) => {
+    showToast(
+      `Appointment reminder sent to ${appt.patientName} (${appt.phone}) for ${appt.timeSlot}.`,
+      'success',
+      'Patient Notified'
+    );
+  };
+
+  const handleNotifyAllUpcoming = (upcomingList: DailyAppointmentItem[]) => {
+    showToast(
+      `Dispatched ${upcomingList.length} appointment reminders for ${selectedScheduleDate}.`,
+      'success',
+      'Batch Reminders Sent'
+    );
+  };
+
   const filteredEncounters = useMemo(() => {
-    if (patientStatusFilter === 'ALL') return enrichedEncounters;
-    return enrichedEncounters.filter((item) => item.status === patientStatusFilter);
-  }, [enrichedEncounters, patientStatusFilter]);
+    return enrichedEncounters.filter((item) => {
+      if (patientStatusFilter !== 'ALL' && item.status !== patientStatusFilter) {
+        return false;
+      }
+      if (selectedAgeBracket) {
+        const computedAge = item.patient ? computeCurrentAge(item.patient).currentAge : null;
+        if (!matchesAgeBracket(computedAge, selectedAgeBracket)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [enrichedEncounters, patientStatusFilter, selectedAgeBracket]);
+
+  const handleSelectAgeBracket = (bracket: DemographicAgeBracket | null) => {
+    setSelectedAgeBracket(bracket);
+    if (bracket) {
+      const matchingCount = enrichedEncounters.filter((item) => {
+        if (patientStatusFilter !== 'ALL' && item.status !== patientStatusFilter) {
+          return false;
+        }
+        const age = item.patient ? computeCurrentAge(item.patient).currentAge : null;
+        return matchesAgeBracket(age, bracket);
+      }).length;
+      showToast(
+        `Filtered patient list to age ${bracket} yrs (${matchingCount} matching on ${selectedScheduleDate}).`,
+        'info',
+        'Age Bracket Filter Applied'
+      );
+    } else {
+      showToast('Cleared age bracket filter. Showing all age groups.', 'info', 'Filter Cleared');
+    }
+  };
 
   const statusCounts = useMemo(() => {
     return enrichedEncounters.reduce(
@@ -272,10 +451,95 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     );
   }, [enrichedEncounters]);
 
-  const handleDownloadFilteredPatientsCsv = () => {
-    if (filteredEncounters.length === 0) {
+  const visibleFilteredEncounters = useMemo(
+    () => filteredEncounters.slice(0, 6),
+    [filteredEncounters]
+  );
+
+  const selectedDashboardEncounters = useMemo(
+    () => filteredEncounters.filter((item) => selectedPatientSnos.has(item.rx.sno)),
+    [filteredEncounters, selectedPatientSnos]
+  );
+
+  const dashboardBatchPrintRows: BatchSummaryPatientRow[] = useMemo(
+    () =>
+      selectedDashboardEncounters
+        .filter((item) => Boolean(item.patient))
+        .map((item) => ({
+          patient: item.patient as PatientRecord,
+          status: item.status,
+          visits: item.patient ? ClinicDataProvider.getPatientVisits(item.patient) : [item.rx],
+        })),
+    [selectedDashboardEncounters]
+  );
+
+  const allVisibleDashboardSelected =
+    visibleFilteredEncounters.length > 0 &&
+    visibleFilteredEncounters.every((item) => selectedPatientSnos.has(item.rx.sno));
+
+  const handleToggleDashboardPatient = (sno: number) => {
+    setSelectedPatientSnos((prev) => {
+      const next = new Set(prev);
+      if (next.has(sno)) next.delete(sno);
+      else next.add(sno);
+      return next;
+    });
+  };
+
+  const handleToggleAllVisibleDashboard = (checked: boolean) => {
+    setSelectedPatientSnos((prev) => {
+      const next = new Set(prev);
+      visibleFilteredEncounters.forEach((item) => {
+        if (checked) next.add(item.rx.sno);
+        else next.delete(item.rx.sno);
+      });
+      return next;
+    });
+  };
+
+  const handleDashboardBulkPrint = () => {
+    if (dashboardBatchPrintRows.length === 0) return;
+    const previousTitle = document.title;
+    document.title = `Clinic-Day-Summaries-${selectedScheduleDate}-${dashboardBatchPrintRows.length}`;
+    document.body.classList.add('printing-batch-summaries');
+
+    showToast(
+      `Prepared print-ready summaries for ${dashboardBatchPrintRows.length} selected patients on ${selectedScheduleDate}.`,
+      'info',
+      'Batch Print Ready'
+    );
+
+    const cleanup = () => {
+      document.body.classList.remove('printing-batch-summaries');
+      document.title = previousTitle;
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.setTimeout(() => window.print(), 120);
+    window.setTimeout(cleanup, 1800);
+  };
+
+  const handleDashboardBulkStatusUpdate = () => {
+    if (selectedDashboardEncounters.length === 0) return;
+    const snos = selectedDashboardEncounters.map((item) => item.rx.sno);
+    const updated = ClinicDataProvider.updatePatientStatusesBatch(snos, dashboardBatchStatus);
+    setRefreshTick((t) => t + 1);
+    showToast(
+      `Updated status to "${dashboardBatchStatus}" for ${updated} selected patients.`,
+      'success',
+      'Batch Status Updated'
+    );
+  };
+
+  const exportEncounterRecordsToCsv = (
+    records: typeof filteredEncounters,
+    fileNameSuffix: string
+  ) => {
+    if (records.length === 0) {
       showToast(
-        `No patient records match "${patientStatusFilter}" on ${selectedScheduleDate}.`,
+        `No patient records match "${patientStatusFilter}"${
+          selectedAgeBracket ? ` in age ${selectedAgeBracket} yrs` : ''
+        } on ${selectedScheduleDate}.`,
         'warning',
         'Nothing to Export'
       );
@@ -306,7 +570,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       'Next Visit',
     ];
 
-    const rows = filteredEncounters.map(({ rx, status, patient, vitals }) => {
+    const rows = records.map(({ rx, status, patient, vitals }) => {
       const computedAge = patient ? computeCurrentAge(patient).currentAge : '';
       return [
         rx.sno,
@@ -330,8 +594,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const csvContent = '\uFEFF' + [headers.map(escapeCsvCell).join(','), ...rows].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const statusSlug = patientStatusFilter.toLowerCase().replace(/\s+/g, '-');
-    const fileName = `clinic-patients-${selectedScheduleDate}-${statusSlug}.csv`;
+    const fileName = `clinic-patients-${selectedScheduleDate}-${fileNameSuffix}.csv`;
 
     const link = document.createElement('a');
     link.href = url;
@@ -342,11 +605,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     URL.revokeObjectURL(url);
 
     showToast(
-      `Downloaded ${filteredEncounters.length} ${
-        patientStatusFilter === 'ALL' ? '' : `${patientStatusFilter.toLowerCase()} `
-      }patient records (${fileName}).`,
+      `Downloaded ${records.length} patient records (${fileName}).`,
       'success',
       'CSV Export Complete'
+    );
+  };
+
+  const handleDownloadFilteredPatientsCsv = () => {
+    const statusSlug = patientStatusFilter.toLowerCase().replace(/\s+/g, '-');
+    const ageSlug = selectedAgeBracket ? `-age-${selectedAgeBracket.replace('+', 'plus')}` : '';
+    exportEncounterRecordsToCsv(filteredEncounters, `${statusSlug}${ageSlug}`);
+  };
+
+  const handleDashboardBulkExportCsv = () => {
+    exportEncounterRecordsToCsv(
+      selectedDashboardEncounters,
+      `selected-${selectedDashboardEncounters.length}`
     );
   };
 
@@ -1015,17 +1289,65 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </section>
       </div>
 
-      {/* ROW 4: Patient List with 'Patient Status' Filter Dropdown + Diagnostic Mix & Age Cohorts */}
+      {/* ROW 4: Daily Appointments Widget + Recharts Patient Demographics Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        <DailyAppointmentsWidget
+          clinicDate={selectedScheduleDate}
+          appointments={dailyAppointments}
+          onSelectPatient={onSelectPatient}
+          onOpenSchedule={() =>
+            onSelectClinicDate
+              ? onSelectClinicDate(selectedScheduleDate)
+              : onNavigate('today')
+          }
+          onCallPatient={handleCallAppointment}
+          onNotifyPatient={handleNotifyAppointment}
+          onNotifyAllUpcoming={handleNotifyAllUpcoming}
+        />
+
+        <PatientDemographicsChart
+          ageDistribution={analytics.ageDistribution}
+          genderFilter={genderFilter}
+          onGenderFilterChange={setGenderFilter}
+          selectedAgeBracket={selectedAgeBracket}
+          onSelectAgeBracket={handleSelectAgeBracket}
+          onOpenReports={() => onNavigate('reports')}
+          onOpenDirectoryForBracket={onFilterDirectoryByAge}
+        />
+      </div>
+
+      {/* ROW 5: Patient List with 'Patient Status' Filter Dropdown + Diagnostic Mix & Age Cohorts */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left 7 Cols: Clinic Day Patients with Patient Status Filter Dropdown */}
-        <section className="lg:col-span-7 neu-card rounded-[24px] p-5 sm:p-6 flex flex-col justify-between gap-3.5">
+        <section
+          id="dashboard-main-patient-list"
+          className="lg:col-span-7 neu-card rounded-[24px] p-5 sm:p-6 flex flex-col justify-between gap-3.5"
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-[17px] font-bold tracking-tight text-[var(--text-primary)]">
-                Clinic day patients
-              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-[17px] font-bold tracking-tight text-[var(--text-primary)]">
+                  Clinic day patients
+                </h2>
+                {selectedAgeBracket && (
+                  <span
+                    id="patient-list-active-age-chip"
+                    className="badge-lilac inline-flex items-center gap-1 px-2.5 py-0.5 text-[10.5px] font-bold"
+                  >
+                    <span>Age {selectedAgeBracket} yrs</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectAgeBracket(null)}
+                      className="hover:opacity-75 cursor-pointer"
+                      aria-label="Remove age bracket filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
               <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                Filter displayed consultations by date and patient status
+                Filter displayed consultations by date, patient status, or age donut slice
               </p>
             </div>
 
@@ -1088,6 +1410,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </select>
 
               <button
+                id="dashboard-clinical-summary-btn"
+                type="button"
+                onClick={() => setIsClinicalSummaryOpen(true)}
+                className="btn-editorial-primary h-9 px-3.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                title={`Open print-ready Clinical Summary for ${selectedScheduleDate}`}
+              >
+                <FileText className="w-3.5 h-3.5 shrink-0" />
+                <span>Clinical Summary</span>
+              </button>
+
+              <button
                 id="dashboard-download-patients-csv-btn"
                 type="button"
                 onClick={handleDownloadFilteredPatientsCsv}
@@ -1100,15 +1433,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Date Selector Strip */}
+          {/* Date Selector + Select All Strip */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+              <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[var(--text-secondary)] pr-2 border-r border-[var(--border-subtle)] cursor-pointer shrink-0 select-none">
+                <input
+                  id="dashboard-select-all-patients-checkbox"
+                  type="checkbox"
+                  checked={allVisibleDashboardSelected}
+                  disabled={visibleFilteredEncounters.length === 0}
+                  onChange={(e) => handleToggleAllVisibleDashboard(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded accent-[var(--accent-primary)] cursor-pointer"
+                />
+                <span>Select all</span>
+              </label>
+
               {ACTIVE_CLINIC_DAYS.map((d) => {
                 const active = selectedScheduleDate === d.dateStr;
                 return (
                   <button
                     key={d.dateStr}
-                    onClick={() => setSelectedScheduleDate(d.dateStr)}
+                    onClick={() => {
+                      setSelectedScheduleDate(d.dateStr);
+                      setSelectedPatientSnos(new Set());
+                    }}
                     style={
                       active
                         ? {
@@ -1140,23 +1488,106 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
           </div>
 
+          {/* Inline Bulk Action Bar when 1+ patients are checked */}
+          {selectedDashboardEncounters.length > 0 && (
+            <div
+              id="dashboard-bulk-action-bar"
+              className="p-3 rounded-[18px] border border-[var(--border)] bg-[var(--accent-soft)]/60 flex flex-wrap items-center justify-between gap-2.5"
+            >
+              <div className="flex items-center gap-2 text-xs">
+                <span className="badge-lilac px-2.5 py-0.5 font-bold inline-flex items-center gap-1">
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  <span>{selectedDashboardEncounters.length} selected</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPatientSnos(new Set())}
+                  className="text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  id="dashboard-bulk-print-btn"
+                  type="button"
+                  onClick={handleDashboardBulkPrint}
+                  className="neu-pill-btn h-7 px-3 rounded-full text-[11px] font-semibold text-[var(--text-primary)] inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Printer className="w-3 h-3 text-[var(--accent-primary)]" />
+                  <span>Print Summaries</span>
+                </button>
+                <button
+                  id="dashboard-bulk-csv-btn"
+                  type="button"
+                  onClick={handleDashboardBulkExportCsv}
+                  className="neu-pill-btn h-7 px-3 rounded-full text-[11px] font-semibold text-[var(--text-primary)] inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Download className="w-3 h-3 text-[var(--success)]" />
+                  <span>Export CSV</span>
+                </button>
+                <select
+                  id="dashboard-bulk-status-select"
+                  value={dashboardBatchStatus}
+                  onChange={(e) =>
+                    setDashboardBatchStatus(e.target.value as PatientClinicalStatus)
+                  }
+                  aria-label="Batch status target"
+                  className="h-7 px-2.5 rounded-full text-[11px] font-semibold bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] cursor-pointer"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Pending Review">Pending Review</option>
+                  <option value="Discharged">Discharged</option>
+                </select>
+                <button
+                  id="dashboard-bulk-status-apply-btn"
+                  type="button"
+                  onClick={handleDashboardBulkStatusUpdate}
+                  className="btn-editorial-primary h-7 px-3 rounded-full text-[11px] font-bold cursor-pointer"
+                >
+                  Update Status
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Filtered Patient Encounter List */}
           {filteredEncounters.length === 0 ? (
-            <div className="py-10 text-center space-y-2 border border-dashed border-[var(--border)] rounded-[20px]">
+            <div className="py-10 text-center space-y-2.5 border border-dashed border-[var(--border)] rounded-[20px]">
               <p className="text-xs font-semibold text-[var(--text-secondary)]">
-                No patients match &ldquo;{patientStatusFilter}&rdquo; on {selectedScheduleDate}.
+                No patients match{' '}
+                {patientStatusFilter !== 'ALL' ? `"${patientStatusFilter}"` : 'current filters'}
+                {selectedAgeBracket ? ` in age bracket ${selectedAgeBracket} yrs` : ''} on{' '}
+                {selectedScheduleDate}.
               </p>
-              <button
-                onClick={() => setPatientStatusFilter('ALL')}
-                className="text-xs font-bold hover:underline cursor-pointer"
-                style={{ color: 'var(--accent-text)' }}
-              >
-                Show all statuses
-              </button>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPatientStatusFilter('ALL');
+                    setSelectedAgeBracket(null);
+                  }}
+                  className="text-xs font-bold hover:underline cursor-pointer"
+                  style={{ color: 'var(--accent-text)' }}
+                >
+                  Clear active filters
+                </button>
+                {selectedAgeBracket && onFilterDirectoryByAge && (
+                  <button
+                    type="button"
+                    onClick={() => onFilterDirectoryByAge(selectedAgeBracket)}
+                    className="neu-pill-btn px-3 py-1 rounded-full text-[11px] font-semibold text-[var(--text-primary)] cursor-pointer"
+                  >
+                    Search all {selectedAgeBracket} yrs patients in Directory
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-1.5">
-              {filteredEncounters.slice(0, 6).map(({ rx, status, patient, vitals }, idx) => {
+              {visibleFilteredEncounters.map(({ rx, status, patient, vitals }, idx) => {
+                const isRowSelected = selectedPatientSnos.has(rx.sno);
                 const computedAge = patient ? computeCurrentAge(patient).currentAge : null;
                 const iconBg =
                   idx % 3 === 0
@@ -1181,9 +1612,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div
                     key={rx.id}
                     onClick={() => patient && onSelectPatient(patient)}
-                    className="p-2.5 flex items-center justify-between gap-3 bg-[var(--surface-muted)]/55 hover:bg-[var(--surface-muted)] border border-transparent hover:border-[var(--border)] rounded-[18px] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group"
+                    className={`p-2.5 flex items-center justify-between gap-3 border rounded-[18px] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer group ${
+                      isRowSelected
+                        ? 'bg-[var(--accent-soft)]/50 border-[var(--accent-primary)]/40'
+                        : 'bg-[var(--surface-muted)]/55 hover:bg-[var(--surface-muted)] border-transparent hover:border-[var(--border)]'
+                    }`}
                   >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div
+                        className="shrink-0 pl-0.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          id={`dashboard-patient-checkbox-${rx.sno}`}
+                          type="checkbox"
+                          checked={isRowSelected}
+                          onChange={() => handleToggleDashboardPatient(rx.sno)}
+                          aria-label={`Select ${rx.patientName || `Patient #${rx.sno}`}`}
+                          className="w-4 h-4 rounded accent-[var(--accent-primary)] cursor-pointer align-middle"
+                        />
+                      </div>
                       <span
                         className="w-9 h-9 rounded-full grid place-items-center shrink-0"
                         style={{ background: iconBg, color: iconFg }}
@@ -1636,6 +2084,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </form>
       </Modal>
+      {/* Print-Ready Daily Clinical Summary Modal */}
+      <DailyClinicalSummaryModal
+        isOpen={isClinicalSummaryOpen}
+        onClose={() => setIsClinicalSummaryOpen(false)}
+        clinicDate={selectedScheduleDate}
+        entries={dailySummaryEntries}
+        settings={settings}
+      />
+
+      {/* Portaled Batch Patient Summaries Print Sheet */}
+      <BatchPatientSummaryPrintSheet
+        rows={dashboardBatchPrintRows}
+        settings={settings}
+        contextLabel={`Clinic Day ${selectedScheduleDate} Selection`}
+      />
     </div>
   );
 };

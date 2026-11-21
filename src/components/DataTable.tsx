@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download, Search, AlertCircle } from 'lucide-react';
 import { Tooltip } from './Tooltip';
 import { Modal } from './Modal';
@@ -26,6 +26,12 @@ interface DataTableProps<T> {
   exportFilename?: string;
   actions?: React.ReactNode;
   onRowClick?: (item: T) => void;
+  selectable?: boolean;
+  getRowId?: (item: T) => string | number;
+  selectedRowIds?: Set<string | number>;
+  onToggleRow?: (rowId: string | number) => void;
+  onToggleSelectAllVisible?: (visibleRowIds: (string | number)[], shouldSelect: boolean) => void;
+  bulkActionBar?: React.ReactNode;
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -41,6 +47,12 @@ export function DataTable<T extends Record<string, any>>({
   exportFilename = 'clinic_data_export.csv',
   actions,
   onRowClick,
+  selectable = false,
+  getRowId,
+  selectedRowIds,
+  onToggleRow,
+  onToggleSelectAllVisible,
+  bulkActionBar,
 }: DataTableProps<T>) {
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,6 +103,26 @@ export function DataTable<T extends Record<string, any>>({
   const validCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (validCurrentPage - 1) * pageSize;
   const paginatedItems = sortedData.slice(startIndex, startIndex + pageSize);
+
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  const visibleRowIds = useMemo(
+    () => (selectable && getRowId ? paginatedItems.map((item) => getRowId(item)) : []),
+    [selectable, getRowId, paginatedItems]
+  );
+  const selectedVisibleCount = useMemo(() => {
+    if (!selectable || !selectedRowIds || visibleRowIds.length === 0) return 0;
+    return visibleRowIds.filter((rowId) => selectedRowIds.has(rowId)).length;
+  }, [selectable, selectedRowIds, visibleRowIds]);
+  const allVisibleSelected =
+    visibleRowIds.length > 0 && selectedVisibleCount === visibleRowIds.length;
+  const someVisibleSelected =
+    selectedVisibleCount > 0 && selectedVisibleCount < visibleRowIds.length;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someVisibleSelected;
+    }
+  }, [someVisibleSelected]);
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -198,11 +230,31 @@ export function DataTable<T extends Record<string, any>>({
         </div>
       </div>
 
+      {/* Optional Bulk Action Bar (shown when rows are selected) */}
+      {bulkActionBar}
+
       {/* Main Table View */}
       <div className="overflow-x-auto min-h-[300px]">
         <table className="w-full text-left text-sm text-[var(--text-secondary)] border-collapse">
           <thead className="bg-[var(--surface-muted)]/80 text-[11px] font-bold text-[var(--text-muted)] border-b border-[var(--border-subtle)] sticky top-0 z-10 backdrop-blur-xs">
             <tr>
+              {selectable && getRowId && (
+                <th scope="col" className="w-11 px-4 py-3.5">
+                  <input
+                    ref={selectAllRef}
+                    id={`${id}-select-all-checkbox`}
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    disabled={visibleRowIds.length === 0}
+                    onChange={(e) =>
+                      onToggleSelectAllVisible &&
+                      onToggleSelectAllVisible(visibleRowIds, e.target.checked)
+                    }
+                    aria-label="Select all visible patient records"
+                    className="w-4 h-4 rounded accent-[var(--accent-primary)] cursor-pointer align-middle"
+                  />
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -238,7 +290,10 @@ export function DataTable<T extends Record<string, any>>({
           <tbody className="divide-y divide-[var(--border-subtle)]">
             {paginatedItems.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-[var(--text-muted)]">
+                <td
+                  colSpan={columns.length + (selectable && getRowId ? 1 : 0)}
+                  className="px-4 py-12 text-center text-[var(--text-muted)]"
+                >
                   <div className="flex flex-col items-center justify-center gap-2">
                     <AlertCircle className="w-8 h-8 opacity-40" />
                     <p className="font-semibold text-[var(--text-secondary)]">No records found</p>
@@ -247,21 +302,46 @@ export function DataTable<T extends Record<string, any>>({
                 </td>
               </tr>
             ) : (
-              paginatedItems.map((item, rowIdx) => (
-                <tr
-                  key={rowIdx}
-                  onClick={() => onRowClick && onRowClick(item)}
-                  className={`hover:bg-emerald-500/[0.06] transition-colors ${
-                    onRowClick ? 'cursor-pointer' : ''
-                  } ${rowIdx % 2 === 0 ? 'bg-[var(--surface-elevated)]' : 'bg-[var(--surface)]/55'}`}
-                >
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3 align-middle text-[var(--text-primary)]">
-                      {col.render ? col.render(item) : item[col.key] ?? '—'}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              paginatedItems.map((item, rowIdx) => {
+                const rowId = selectable && getRowId ? getRowId(item) : rowIdx;
+                const isSelected = Boolean(selectable && selectedRowIds && selectedRowIds.has(rowId));
+                return (
+                  <tr
+                    key={String(rowId)}
+                    onClick={() => onRowClick && onRowClick(item)}
+                    className={`hover:bg-emerald-500/[0.06] transition-colors ${
+                      onRowClick ? 'cursor-pointer' : ''
+                    } ${
+                      isSelected
+                        ? 'bg-[var(--accent-soft)]/40'
+                        : rowIdx % 2 === 0
+                        ? 'bg-[var(--surface-elevated)]'
+                        : 'bg-[var(--surface)]/55'
+                    }`}
+                  >
+                    {selectable && getRowId && (
+                      <td
+                        className="w-11 px-4 py-3 align-middle"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          id={`${id}-row-checkbox-${rowId}`}
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => onToggleRow && onToggleRow(rowId)}
+                          aria-label={`Select record ${rowId}`}
+                          className="w-4 h-4 rounded accent-[var(--accent-primary)] cursor-pointer align-middle"
+                        />
+                      </td>
+                    )}
+                    {columns.map((col) => (
+                      <td key={col.key} className="px-4 py-3 align-middle text-[var(--text-primary)]">
+                        {col.render ? col.render(item) : item[col.key] ?? '—'}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

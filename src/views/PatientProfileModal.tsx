@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { PatientRecord } from '../types/clinic';
+import { ClinicSettings, PatientRecord } from '../types/clinic';
 import { ClinicDataProvider } from '../services/dataProvider';
 import { Modal } from '../components/Modal';
 import { useToast } from '../components/Toast';
+import { useClinicalVitalsMonitor } from '../hooks/useClinicalVitalsMonitor';
 import { PatientVitalsChart } from '../components/PatientVitalsChart';
 import { VitalsSummaryWidget } from '../components/VitalsSummaryWidget';
+import { PatientHistoryPrintSheet } from '../components/PatientHistoryPrintSheet';
 import {
   AlertTriangle,
   Calendar,
@@ -12,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Printer,
+  FileDown,
   History,
   Code2,
   ShieldCheck,
@@ -23,12 +26,14 @@ interface PatientProfileModalProps {
   patient: PatientRecord | null;
   isOpen: boolean;
   onClose: () => void;
+  settings?: ClinicSettings;
 }
 
 export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   patient,
   isOpen,
   onClose,
+  settings,
 }) => {
   const { showToast } = useToast();
   const [expandedVisitId, setExpandedVisitId] = useState<string | null>(null);
@@ -42,6 +47,26 @@ export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     }
     return list;
   }, [patient]);
+
+  const latestPatientVitals = useMemo(() => {
+    if (!patient || visits.length === 0) return [];
+    const latest = visits[0];
+    return [
+      {
+        id: latest.id,
+        patientSno: patient.sno,
+        patientName: `${patient.firstName} ${patient.lastName}`.trim(),
+        date: latest.date,
+        examination: latest.examination,
+      },
+    ];
+  }, [patient, visits]);
+
+  useClinicalVitalsMonitor(latestPatientVitals, {
+    scopeKey: patient ? `patient-modal-${patient.sno}` : 'patient-modal-none',
+    enabled: Boolean(isOpen && patient),
+    maxToastsPerBatch: 1,
+  });
 
   if (!patient) return null;
 
@@ -60,6 +85,36 @@ export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     setTimeout(() => {
       window.print();
     }, 150);
+  };
+
+  const handleDownloadPdfHistory = () => {
+    const previousTitle = document.title;
+    const safeName = `${patient.firstName}-${patient.lastName}`
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    const archiveFilename = `Patient-History-Reg-${patient.sno}-${safeName || 'Record'}`;
+
+    document.title = archiveFilename;
+    document.body.classList.add('printing-patient-history');
+
+    showToast(
+      `Prepared archival PDF history (${visits.length} encounters) for ${patient.firstName} ${patient.lastName}. Choose "Save as PDF" to archive.`,
+      'success',
+      'Archival PDF Ready'
+    );
+
+    const cleanup = () => {
+      document.body.classList.remove('printing-patient-history');
+      document.title = previousTitle;
+      window.removeEventListener('afterprint', cleanup);
+    };
+
+    window.addEventListener('afterprint', cleanup);
+    window.setTimeout(() => {
+      window.print();
+    }, 120);
+    // Fallback cleanup in case afterprint is suppressed in embedded preview frames
+    window.setTimeout(cleanup, 1800);
   };
 
   return (
@@ -98,37 +153,62 @@ export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
             </div>
           </div>
 
-          <button
-            id="patient-header-print-btn"
-            onClick={handlePrintPatientReport}
-            className="neu-pill-btn hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[var(--text-primary)] rounded-full shrink-0 cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
-            <span>Print Report</span>
-          </button>
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
+            <button
+              id="patient-header-download-pdf-btn"
+              type="button"
+              onClick={handleDownloadPdfHistory}
+              className="btn-editorial-primary flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full shrink-0 cursor-pointer"
+              title="Generate structured archival PDF summarizing vitals, medical history, and past prescriptions"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              <span>Download PDF History</span>
+            </button>
+            <button
+              id="patient-header-print-btn"
+              type="button"
+              onClick={handlePrintPatientReport}
+              className="neu-pill-btn flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-[var(--text-primary)] rounded-full shrink-0 cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
+              <span>Print Report</span>
+            </button>
+          </div>
         </div>
       }
       footer={
-        <div className="flex items-center justify-between w-full gap-3">
+        <div className="flex flex-wrap items-center justify-between w-full gap-3">
           <div className="text-xs text-[var(--text-muted)]">
             <span className="font-semibold text-[var(--text-primary)]">
               {visits.length} Historical Encounters
             </span>{' '}
             recorded in ledger
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              id="patient-download-pdf-history-btn"
+              type="button"
+              onClick={handleDownloadPdfHistory}
+              className="btn-editorial-primary px-4 py-2 text-xs font-bold rounded-full flex items-center gap-1.5 cursor-pointer"
+              title="Generate structured, print-optimized archival PDF document"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              <span>Download PDF History</span>
+            </button>
             <button
               id="patient-print-report-btn"
+              type="button"
               onClick={handlePrintPatientReport}
               className="neu-pill-btn px-4 py-2 text-xs font-bold text-[var(--text-primary)] rounded-full flex items-center gap-1.5 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
-              <span>Print Patient Report</span>
+              <span>Print Report</span>
             </button>
             <button
               id="patient-modal-close-action"
+              type="button"
               onClick={onClose}
-              className="btn-editorial-primary px-5 py-2 text-xs font-semibold rounded-full cursor-pointer"
+              className="neu-pill-btn px-4 py-2 text-xs font-semibold text-[var(--text-secondary)] rounded-full cursor-pointer"
             >
               Close
             </button>
@@ -136,6 +216,13 @@ export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
         </div>
       }
     >
+      {isOpen && (
+        <PatientHistoryPrintSheet
+          patient={patient}
+          visits={visits}
+          settings={settings}
+        />
+      )}
       <div className="space-y-5">
         {/* Prominent Allergy Alert Banner */}
         {patient.allergy ? (

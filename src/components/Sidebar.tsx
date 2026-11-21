@@ -33,6 +33,9 @@ interface SidebarProps {
   onToggleOrientation?: (orientation: 'vertical' | 'horizontal') => void;
   sidebarAppearance?: 'follow-theme' | 'force-light' | 'force-dark';
   settings?: ClinicSettings;
+  isMobile?: boolean;
+  isMobileOpen?: boolean;
+  onCloseMobileMenu?: () => void;
 }
 
 interface NavItem {
@@ -74,6 +77,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleOrientation,
   sidebarAppearance = 'follow-theme',
   settings,
+  isMobile = false,
+  isMobileOpen = false,
+  onCloseMobileMenu,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
@@ -85,7 +91,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       if (contextMenu) setContextMenu(null);
     };
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setContextMenu(null);
+      if (e.key === 'Escape') {
+        setContextMenu(null);
+        if (isMobile && isMobileOpen && onCloseMobileMenu) {
+          onCloseMobileMenu();
+        }
+      }
     };
 
     window.addEventListener('click', handleOutsideClick);
@@ -94,13 +105,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
       window.removeEventListener('click', handleOutsideClick);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [contextMenu]);
+  }, [contextMenu, isMobile, isMobileOpen, onCloseMobileMenu]);
 
-  const isHidden = mode === 'hidden';
-  const isEffectivelyExpanded =
-    mode === 'expanded' || (mode === 'icon-rail' && hoverExpansion && isHovered);
+  const isHidden = isMobile ? !isMobileOpen : mode === 'hidden';
+  const isEffectivelyExpanded = isMobile
+    ? true
+    : mode === 'expanded' || (mode === 'icon-rail' && hoverExpansion && isHovered);
+
+  const handleNavClick = (mod: ActiveModule) => {
+    onNavigate(mod);
+    if (isMobile && onCloseMobileMenu) {
+      onCloseMobileMenu();
+    }
+  };
+
+  const handleCloseAction = () => {
+    setIsCloseBtnHovered(false);
+    if (isMobile && onCloseMobileMenu) {
+      onCloseMobileMenu();
+      return;
+    }
+    if (onCloseSidebar) {
+      onCloseSidebar();
+    }
+  };
 
   const handleContextMenu = (e: React.MouseEvent) => {
+    if (isMobile) return;
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
@@ -140,7 +171,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         const btn = (
           <button
             id={`sidebar-nav-${item.id}`}
-            onClick={() => onNavigate(item.id)}
+            type="button"
+            onClick={() => handleNavClick(item.id)}
             style={
               isActive
                 ? {
@@ -150,9 +182,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }
                 : undefined
             }
-            className={`flex items-center rounded-full transition-all duration-200 ease-out cursor-pointer ${
+            className={`flex items-center rounded-full transition-all duration-200 ease-out cursor-pointer touch-manipulation active:scale-[0.98] ${
               isEffectivelyExpanded
-                ? 'w-full h-[38px] px-3.5 gap-2.5 justify-start'
+                ? isMobile
+                  ? 'w-full min-h-[44px] px-4 gap-3 justify-start'
+                  : 'w-full h-[38px] px-3.5 gap-2.5 justify-start'
                 : 'w-11 h-11 mx-auto justify-center shrink-0'
             } ${
               isActive
@@ -168,7 +202,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {isEffectivelyExpanded && (
               <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap min-w-0">
-                <span className="text-[12.5px] truncate">{item.label}</span>
+                <span className={`${isMobile ? 'text-[13.5px]' : 'text-[12.5px]'} truncate`}>
+                  {item.label}
+                </span>
                 {item.count && (
                   <span className="text-[10.5px] font-mono tabular-nums text-[var(--text-muted)] ml-2 shrink-0">
                     {item.count}
@@ -179,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         );
 
-        if (!isEffectivelyExpanded && !isHidden) {
+        if (!isMobile && !isEffectivelyExpanded && !isHidden) {
           return (
             <div key={item.id} className="w-full flex justify-center">
               <Tooltip
@@ -203,27 +239,59 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
+      {/* Mobile Backdrop Scrim: blocks all clicks/taps on background content while drawer is open */}
+      {isMobile && (
+        <div
+          id="mobile-sidebar-backdrop"
+          aria-hidden={!isMobileOpen}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (onCloseMobileMenu) onCloseMobileMenu();
+          }}
+          className={`fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-[2px] touch-none transition-opacity duration-250 ease-out ${
+            isMobileOpen
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none'
+          }`}
+        />
+      )}
+
       <aside
         id="app-primary-sidebar"
         ref={sidebarRef}
+        role={isMobile ? 'dialog' : undefined}
+        aria-modal={isMobile && isMobileOpen ? true : undefined}
+        aria-label="Primary navigation menu"
         onMouseEnter={() => {
-          if (mode === 'icon-rail' && hoverExpansion) setIsHovered(true);
+          if (!isMobile && mode === 'icon-rail' && hoverExpansion) setIsHovered(true);
         }}
         onMouseLeave={() => {
-          if (mode === 'icon-rail' && hoverExpansion) setIsHovered(false);
+          if (!isMobile && mode === 'icon-rail' && hoverExpansion) setIsHovered(false);
+        }}
+        onClick={(e) => {
+          if (isMobile) e.stopPropagation();
         }}
         onContextMenu={handleContextMenu}
         style={appearanceStyle}
         aria-hidden={isHidden}
-        className={`sidebar-shell shrink-0 h-screen flex flex-col justify-between select-none z-20 ${
-          isEffectivelyExpanded ? 'overflow-hidden' : 'overflow-visible'
-        } ${appearanceExtraClass} ${
-          isHidden
-            ? 'w-0 opacity-0 -translate-x-4 border-r-0 pointer-events-none overflow-hidden'
-            : isEffectivelyExpanded
-            ? 'w-[232px] opacity-100 translate-x-0'
-            : 'w-[72px] opacity-100 translate-x-0'
-        }`}
+        className={`sidebar-shell shrink-0 flex flex-col justify-between select-none ${
+          isMobile
+            ? `fixed inset-y-0 left-0 z-50 h-[100dvh] w-[280px] max-w-[85vw] shadow-2xl overflow-hidden overscroll-contain touch-pan-y ${
+                isMobileOpen
+                  ? 'translate-x-0 opacity-100 pointer-events-auto'
+                  : '-translate-x-full opacity-0 pointer-events-none'
+              }`
+            : `h-screen z-20 ${
+                isEffectivelyExpanded ? 'overflow-hidden' : 'overflow-visible'
+              } ${
+                isHidden
+                  ? 'w-0 opacity-0 -translate-x-4 border-r-0 pointer-events-none overflow-hidden'
+                  : isEffectivelyExpanded
+                  ? 'w-[232px] opacity-100 translate-x-0'
+                  : 'w-[72px] opacity-100 translate-x-0'
+              }`
+        } ${appearanceExtraClass}`}
       >
         {/* Top Brand Area */}
         <div
@@ -232,8 +300,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }`}
         >
           <button
-            onClick={() => onNavigate('dashboard')}
-            className="flex items-center gap-2.5 overflow-hidden text-left cursor-pointer group"
+            type="button"
+            onClick={() => handleNavClick('dashboard')}
+            className="flex items-center gap-2.5 overflow-hidden text-left cursor-pointer group touch-manipulation min-h-[44px]"
           >
             {settings?.logoDataUrl ? (
               <img
@@ -266,20 +335,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </button>
 
-          {onCloseSidebar && isEffectivelyExpanded && (
+          {(onCloseSidebar || (isMobile && onCloseMobileMenu)) && isEffectivelyExpanded && (
             <button
               id="sidebar-close-btn"
               type="button"
-              onClick={() => {
-                setIsCloseBtnHovered(false);
-                onCloseSidebar();
-              }}
+              onClick={handleCloseAction}
               onMouseEnter={() => setIsCloseBtnHovered(true)}
               onMouseLeave={() => setIsCloseBtnHovered(false)}
               onFocus={() => setIsCloseBtnHovered(true)}
               onBlur={() => setIsCloseBtnHovered(false)}
               style={
-                isCloseBtnHovered
+                isMobile || isCloseBtnHovered
                   ? {
                       background: 'var(--pastel-rose-bg)',
                       color: '#e11d48',
@@ -291,12 +357,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       borderColor: 'var(--border)',
                     }
               }
-              className="w-8 h-8 rounded-full border shadow-[var(--neu-raised-sm)] flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
-              title="Collapse Side Menu"
-              aria-label="Collapse Side Menu"
+              className={`${
+                isMobile ? 'min-w-[44px] min-h-[44px] w-11 h-11' : 'w-8 h-8'
+              } rounded-full border shadow-[var(--neu-raised-sm)] flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]`}
+              title={isMobile ? 'Close Navigation Menu' : 'Collapse Side Menu'}
+              aria-label={isMobile ? 'Close Navigation Menu' : 'Collapse Side Menu'}
             >
-              {isCloseBtnHovered ? (
-                <X className="w-4 h-4 stroke-[2.4] transition-transform duration-150" />
+              {isMobile || isCloseBtnHovered ? (
+                <X className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} stroke-[2.4] transition-transform duration-150`} />
               ) : (
                 <PanelLeftClose className="w-4 h-4 stroke-[2.1] transition-transform duration-150" />
               )}
@@ -306,7 +374,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Clean Vertical Navigation Groups (Zero Horizontal Icon Collision) */}
         <nav
-          className={`flex-1 flex flex-col gap-2.5 pb-2 ${
+          className={`flex-1 flex flex-col gap-2.5 pb-2 overscroll-contain ${
             isEffectivelyExpanded
               ? 'overflow-y-auto px-3'
               : 'overflow-y-auto overflow-x-hidden px-1.5 items-center'
@@ -338,8 +406,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 158,361 encounters across 43,488 patient profiles.
               </p>
               <button
-                onClick={() => onNavigate('reports')}
-                className="mt-2 text-[11px] font-bold hover:underline cursor-pointer inline-flex items-center gap-1"
+                type="button"
+                onClick={() => handleNavClick('reports')}
+                className="mt-2 text-[11px] font-bold hover:underline cursor-pointer inline-flex items-center gap-1 touch-manipulation min-h-[32px]"
                 style={{ color: 'var(--accent-text)' }}
               >
                 <span>Open analytics</span>
@@ -349,8 +418,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           <button
-            onClick={() => onNavigate('settings')}
-            className={`w-full flex items-center rounded-xl py-1.5 transition-colors hover:bg-[var(--nav-hover-bg)] text-left cursor-pointer ${
+            type="button"
+            onClick={() => handleNavClick('settings')}
+            className={`w-full flex items-center rounded-xl py-1.5 transition-colors hover:bg-[var(--nav-hover-bg)] text-left cursor-pointer touch-manipulation ${
+              isMobile ? 'min-h-[48px]' : ''
+            } ${
               isEffectivelyExpanded ? 'px-2 gap-2.5 justify-start' : 'px-0 justify-center'
             }`}
             title="Clinic Profile & Settings"
