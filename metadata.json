@@ -1,0 +1,6 @@
+{
+  "name": "Dr. J.S. Pandey Clinic - Forensic Legacy Intelligence",
+  "description": "Portable offline read-only forensic clinic intelligence and modernization demonstration system for Dr. J.S. Pandey Clinic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
