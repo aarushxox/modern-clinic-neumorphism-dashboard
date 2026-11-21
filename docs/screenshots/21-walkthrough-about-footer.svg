@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  <defs>
+  <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+    <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+  </filter>
+  <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f4f6f9"/><stop offset="100%" stop-color="#eceff4"/></linearGradient>
+  <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/></linearGradient>
+  <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/></linearGradient>
+  <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/></linearGradient>
+  <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/></linearGradient>
+  <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/></linearGradient>
+</defs>
+<style>
+  .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, sans-serif; fill: #1c2230; }
+  .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+  .lbl { font: 700 11px "Plus Jakarta Sans", sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+  .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+  .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+  .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+  .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+  .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+</style>
+  <rect width="1200" height="680" fill="url(#bgLight)"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl">ONBOARDING, ATTRIBUTION &amp; COMPACT GLOBAL FOOTER</text>
+  <text x="68" y="96" class="title">Walkthrough Guide, About Suite &amp; Protected Credits Footer</text>
+  <text x="68" y="118" class="sub">Built-in keyboard cheat-sheet modal paired with a compact global attribution footer and official references.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    <rect x="68" y="160" width="520" height="270" rx="22" fill="#ffffff" stroke="#e5e9f0" filter="url(#neu)"/>
+    <text x="96" y="198" class="lbl">INTERACTIVE WALKTHROUGH MODAL (?)</text>
+    <text x="96" y="226" class="h2">Guided Clinical Suite Tour</text>
+    <text x="96" y="256" class="body">- One-click jump to Overview, Directory, Analytics</text>
+    <text x="96" y="284" class="body">- Keyboard shortcut cheat-sheet (Ctrl+D, Ctrl+S, Alt+R)</text>
+    <text x="96" y="312" class="body">- Synthetic preview data notice for public evaluators</text>
+    <rect x="96" y="352" width="190" height="40" rx="20" fill="#1d222e"/>
+    <text x="191" y="377" text-anchor="middle" class="pill" fill="#ffffff">Launch Quick Tour</text>
+
+    <rect x="612" y="160" width="520" height="270" rx="22" fill="url(#lilacCard)" stroke="#d8cff5"/>
+    <text x="640" y="198" class="lbl" fill="#6152b3">PUBLIC USAGE &amp; UI PROTECTION</text>
+    <text x="640" y="226" class="h2">POLICIES.md &amp; Custom LICENSE</text>
+    <text x="640" y="258" class="body">- Source-available public preview on GitHub</text>
+    <text x="640" y="286" class="body">- UI design protected (no copying without permission)</text>
+    <text x="640" y="314" class="body">- Full stack transparency (Google AI Studio + Gemini)</text>
+    <text x="640" y="342" class="body">- Private clinic data strictly excluded via .gitignore</text>
+
+    <!-- Compact Footer Preview -->
+    <rect x="68" y="454" width="1064" height="140" rx="20" fill="#ffffff" stroke="#e5e9f0" filter="url(#neu)"/>
+    <text x="96" y="488" class="h2" font-size="14">Pranav Raj Sahu  ·  Hexatom Team / Aronar AI</text>
+    <rect x="436" y="471" width="150" height="24" rx="12" fill="#efebfb"/>
+    <text x="511" y="487" text-anchor="middle" class="pill" fill="#6152b3">HUMAN + AI CRAFTED</text>
+    <rect x="680" y="471" width="424" height="24" rx="12" fill="#fcebf1"/>
+    <text x="892" y="487" text-anchor="middle" class="pill" fill="#b44b6d">Built with Google AI Studio &amp; Gemini · Copyright Protected</text>
+
+    <text x="96" y="528" class="muted">References:  Hexatom  |  Hexatom Portfolio  |  Aronar AI  |  Pranav Portfolio  |  Hexatom Fonts  |  Hexatom Colors  |  CREVR Tools</text>
+    <line x1="96" y1="548" x2="1104" y2="548" stroke="#edf0f5"/>
+    <text x="96" y="574" class="muted">Copyright 2026 Pranav Raj Sahu · Hexatom Team / Aronar AI. All Rights Reserved.</text>
+    <text x="1104" y="574" text-anchor="end" class="muted">Public UI Preview · Synthetic dummy data only</text>
+    
+  <text x="68" y="636" class="muted">Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

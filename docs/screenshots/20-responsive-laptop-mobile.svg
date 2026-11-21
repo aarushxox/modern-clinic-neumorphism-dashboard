@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  <defs>
+  <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+    <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+  </filter>
+  <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f4f6f9"/><stop offset="100%" stop-color="#eceff4"/></linearGradient>
+  <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/></linearGradient>
+  <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/></linearGradient>
+  <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/></linearGradient>
+  <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/></linearGradient>
+  <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/></linearGradient>
+</defs>
+<style>
+  .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, sans-serif; fill: #1c2230; }
+  .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+  .lbl { font: 700 11px "Plus Jakarta Sans", sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+  .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+  .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+  .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+  .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+  .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+</style>
+  <rect width="1200" height="680" fill="url(#bgLight)"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl">MULTI-VIEWPORT ERGONOMICS  /  DESKTOP, LAPTOP &amp; MOBILE</text>
+  <text x="68" y="96" class="title">Responsive Grid Adaptation Across Screen Sizes</text>
+  <text x="68" y="118" class="sub">Engineered for zero icon collision on 1280px–1440px laptops while scaling cleanly down to tablets and phones.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    <!-- Desktop 1440px Frame -->
+    <rect x="68" y="162" width="540" height="428" rx="20" fill="#f8fafc" stroke="#d4dde9"/>
+    <text x="92" y="196" class="lbl">DESKTOP / LAPTOP (1280PX - 1440PX)</text>
+    <rect x="92" y="214" width="60" height="350" rx="14" fill="#e5ebf4"/>
+    <rect x="166" y="214" width="418" height="42" rx="12" fill="#ffffff" stroke="#e5e9f0"/>
+    <rect x="166" y="270" width="130" height="72" rx="16" fill="url(#lilacCard)"/>
+    <rect x="310" y="270" width="130" height="72" rx="16" fill="url(#sageCard)"/>
+    <rect x="454" y="270" width="130" height="72" rx="16" fill="url(#skyCard)"/>
+    <rect x="166" y="358" width="268" height="206" rx="18" fill="#ffffff" stroke="#e5e9f0"/>
+    <rect x="448" y="358" width="136" height="206" rx="18" fill="url(#sandCard)"/>
+
+    <!-- Tablet Frame -->
+    <rect x="636" y="162" width="268" height="428" rx="20" fill="#f8fafc" stroke="#d4dde9"/>
+    <text x="660" y="196" class="lbl" fill="#267b54">TABLET (768PX)</text>
+    <rect x="660" y="214" width="220" height="38" rx="12" fill="#ffffff" stroke="#e5e9f0"/>
+    <rect x="660" y="266" width="104" height="72" rx="16" fill="url(#lilacCard)"/>
+    <rect x="776" y="266" width="104" height="72" rx="16" fill="url(#sageCard)"/>
+    <rect x="660" y="352" width="220" height="106" rx="16" fill="#ffffff" stroke="#e5e9f0"/>
+    <rect x="660" y="470" width="220" height="94" rx="16" fill="url(#roseCard)"/>
+
+    <!-- Mobile Frame -->
+    <rect x="932" y="162" width="200" height="428" rx="26" fill="#f8fafc" stroke="#d4dde9"/>
+    <text x="956" y="196" class="lbl" fill="#b44b6d">MOBILE (390PX)</text>
+    <rect x="954" y="214" width="156" height="36" rx="12" fill="#ffffff" stroke="#e5e9f0"/>
+    <rect x="954" y="264" width="156" height="66" rx="16" fill="url(#lilacCard)"/>
+    <rect x="954" y="344" width="156" height="66" rx="16" fill="url(#skyCard)"/>
+    <rect x="954" y="424" width="156" height="138" rx="16" fill="#ffffff" stroke="#e5e9f0"/>
+    
+  <text x="68" y="636" class="muted">Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

@@ -48,8 +48,8 @@
 
   <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
   <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
-  <text x="68" y="66" class="lbl" >FILTERING & EXPORT WORKFLOW  /  INLINE RECHARTS SPARKLINES</text>
-  <text x="68" y="96" class="title" >Clinic Day Patients: Status Filter, Mini Sparklines & Download CSV</text>
+  <text x="68" y="66" class="lbl" >FILTERING &amp; EXPORT WORKFLOW  /  INLINE RECHARTS SPARKLINES</text>
+  <text x="68" y="96" class="title" >Clinic Day Patients: Status Filter, Mini Sparklines &amp; Download CSV</text>
   <text x="68" y="118" class="sub" >Filter daily consultations by Active, Pending Review, or Discharged, toggle HR/BP sparklines, and export RFC-4180 CSV.</text>
   <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
   

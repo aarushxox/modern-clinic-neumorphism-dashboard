@@ -49,7 +49,7 @@
   <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
   <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
   <text x="68" y="66" class="lbl" >CLINICAL PRINT ENGINE  /  @MEDIA PRINT OPTIMIZATION</text>
-  <text x="68" y="96" class="title" >Print-Optimized Clinical Report & Vitals Summary Sheet</text>
+  <text x="68" y="96" class="title" >Print-Optimized Clinical Report &amp; Vitals Summary Sheet</text>
   <text x="68" y="118" class="sub" >Dedicated CSS print media rules strip navigation chrome and format crisp black-on-white clinical tables.</text>
   <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
   

@@ -49,7 +49,7 @@
   <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
   <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
   <text x="68" y="66" class="lbl" >NAVIGATION ERGONOMICS  /  SMOOTH SIDEBAR STATE MACHINE</text>
-  <text x="68" y="96" class="title" >3-Line Menu Toggle, Icon-Rail Mode & Horizontal Navigation</text>
+  <text x="68" y="96" class="title" >3-Line Menu Toggle, Icon-Rail Mode &amp; Horizontal Navigation</text>
   <text x="68" y="118" class="sub" >Silky collapsible sidebar: 3-line hamburger default switches to red-pink X when expanded, plus right-click horizontal layout.</text>
   <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
   

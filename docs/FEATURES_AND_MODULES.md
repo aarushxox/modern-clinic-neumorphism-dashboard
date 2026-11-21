@@ -6,7 +6,7 @@ Every public-facing screen in **Modern Clinic Neumorphism Dashboard** is built f
 
 ## 1. Clinical Overview Dashboard
 
-![Dashboard Overview Light](screenshots/dashboard-overview-light.jpg)
+![Dashboard Overview Light](screenshots/dashboard-overview-light.webp)
 
 - **6 Pastel Hero KPI Cards**: Total Patients, Historical Encounters, Clinic Day OPD, Master Medicines, Rx Shortcuts, and Issued Certificates — each styled with whisper-soft neumorphic elevation and one-click drill-down.
 - **Daily Clinical Snapshot & Care Continuity**: Live OPD completion ring (`conic-gradient`) paired with returning-patient retention progress bar and mean cohort statistics.
@@ -47,7 +47,7 @@ Every public-facing screen in **Modern Clinic Neumorphism Dashboard** is built f
 
 ## 5. Longitudinal Patient Profile & Print-Ready Vitals Summary
 
-![Patient Vitals Modal](screenshots/patient-vitals-modal.jpg)
+![Patient Vitals Modal](screenshots/patient-vitals-modal.webp)
 
 - **Historical Vitals Line Chart**: Recharts multi-axis visualization plotting longitudinal Systolic BP, Diastolic BP, and Weight trajectories.
 - **Print-Optimized Vitals Summary Table**: Formatted clinical table displaying Visit Date, Blood Pressure (`mmHg`), calculated Mean Arterial Pressure (`MAP`), Pulse (`bpm`), clinical classification (`Normal`, `Elevated`, `Stage 1 HTN`, `Stage 2 HTN`), and encounter context.
@@ -59,7 +59,7 @@ Every public-facing screen in **Modern Clinic Neumorphism Dashboard** is built f
 
 ## 6. Daily OPD Clinic, Schedule Calendar & Master Formulary
 
-![Schedule Calendar and Master Formulary](screenshots/schedule-and-formulary.jpg)
+![Schedule Calendar and Master Formulary](screenshots/schedule-and-formulary.webp)
 
 | Module | Key Capabilities | Visual Preview |
 |---|---|---|
@@ -72,7 +72,7 @@ Every public-facing screen in **Modern Clinic Neumorphism Dashboard** is built f
 
 ## 7. Clinical Analytics & Calendar Date-Range Reports
 
-![Clinical Analytics Dark Mode](screenshots/analytics-dark-mode.jpg)
+![Clinical Analytics Dark Mode](screenshots/analytics-dark-mode.webp)
 
 - **Interactive Date-Range Picker**: Filter historical analytics between specific calendar dates with quick preset pills and custom start/end selectors.
 - **26+ Analytical Views & Charts**: Multi-year visit volume, seasonal morbidity patterns, diagnostic mix donut breakdown, and gender-filtered age cohorts.

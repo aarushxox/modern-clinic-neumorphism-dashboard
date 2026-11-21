@@ -12,15 +12,15 @@
 [![Motion](https://img.shields.io/badge/Motion-12.23-1c2230?style=flat-square)](https://motion.dev/)
 [![Lucide Icons](https://img.shields.io/badge/Icons-Lucide_React-1c2230?style=flat-square)](https://lucide.dev/)
 [![Data Policy](https://img.shields.io/badge/Data-Synthetic_Preview_Only-2f8f63?style=flat-square)](docs/PRIVACY_AND_DATA_POLICY.md)
-[![License](https://img.shields.io/badge/License-MIT_with_Attribution-6f63c8?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-Custom_Public_Preview-b44b6d?style=flat-square)](LICENSE)
 
 **A modern, print-ready, multi-theme clinical dashboard crafted with soft pastel neumorphism, live Recharts vitals telemetry, schedule-synced clinical reminders, and instant filtered CSV export.**
 
-[Explore Features](#public-modules--feature-matrix) · [Visual Gallery (17 Previews)](#visual-showcase-gallery-17-previews) · [Architecture](#system-architecture--infographics) · [Micro Code Previews](#micro-code-previews) · [Quick Start](#quick-start--how-to-use) · [Privacy & Usage Policy](#privacy-synthetic-data--public-usage-policy)
+[Explore Features](#public-modules--feature-matrix) · [Visual Gallery (25 Optimized Previews)](#visual-showcase-gallery-25-optimized-previews) · [Architecture](#system-architecture--infographics) · [Quick Start](#quick-start--how-to-use) · [Policies & Licensing](#policies-ui-design-protection--licensing)
 
 <br/>
 
-![Modern Clinic Neumorphism Dashboard — Overview Light Mode](docs/screenshots/dashboard-overview-light.jpg)
+![Modern Clinic Neumorphism Dashboard — Overview Light Mode](docs/screenshots/dashboard-overview-light.webp)
 
 </div>
 
@@ -31,13 +31,13 @@
 1. [What Is This Project?](#what-is-this-project)
 2. [Documentation Micro-Files Index](#documentation-micro-files-index)
 3. [Public Modules & Feature Matrix](#public-modules--feature-matrix)
-4. [Visual Showcase Gallery (17 Previews)](#visual-showcase-gallery-17-previews)
+4. [Visual Showcase Gallery (25 Optimized Previews)](#visual-showcase-gallery-25-optimized-previews)
 5. [System Architecture & Infographics](#system-architecture--infographics)
 6. [Tech Stack & Tools](#tech-stack--tools)
 7. [Micro Code Previews](#micro-code-previews)
 8. [Quick Start & How to Use](#quick-start--how-to-use)
 9. [Keyboard Shortcuts Reference](#keyboard-shortcuts-reference)
-10. [Privacy, Synthetic Data & Public Usage Policy](#privacy-synthetic-data--public-usage-policy)
+10. [Policies, UI Design Protection & Licensing](#policies-ui-design-protection--licensing)
 11. [Author Credits & Official References](#author-credits--official-references)
 
 ---
@@ -60,17 +60,18 @@
 
 ## Documentation Micro-Files Index
 
-This repository separates deep engineering references into focused micro-documents inside [`docs/`](docs/):
+This repository organizes deep engineering specifications, usage terms, and policies into modular documentation files:
 
 | Document | Scope & Contents |
 |---|---|
+| [`POLICIES.md`](POLICIES.md) | **UI Design Protection Policy, Public Usage Terms, AI + Human Technical Stack (Google AI Studio, Gemini) & Permission Contact** |
+| [`LICENSE`](LICENSE) | **Custom Source-Available Public Preview License (All Rights Reserved)** |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Layered architecture, component graph, Mermaid sequence diagrams, and full source tree |
 | [`docs/FEATURES_AND_MODULES.md`](docs/FEATURES_AND_MODULES.md) | Deep walkthrough of every public clinical screen and interactive workflow |
 | [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) | Soft Pastel Neumorphism elevation tokens, 7-theme palette matrix, curves, and typography |
 | [`docs/TECH_STACK_AND_TOOLS.md`](docs/TECH_STACK_AND_TOOLS.md) | Complete library inventory, build/lint commands, and AI + human tooling breakdown |
 | [`docs/USAGE_AND_SHORTCUTS.md`](docs/USAGE_AND_SHORTCUTS.md) | Step-by-step installation, workflow guides, keyboard hotkeys, and print instructions |
-| [`docs/PRIVACY_AND_DATA_POLICY.md`](docs/PRIVACY_AND_DATA_POLICY.md) | Synthetic preview data guarantee, `.gitignore` boundaries, and open UI usage terms |
-| [`LICENSE`](LICENSE) | MIT License with Attribution & Synthetic Clinical Data Notice |
+| [`docs/PRIVACY_AND_DATA_POLICY.md`](docs/PRIVACY_AND_DATA_POLICY.md) | Synthetic preview data guarantee and `.gitignore` private-data isolation rules |
 
 ---
 
@@ -95,55 +96,75 @@ This repository separates deep engineering references into focused micro-documen
 
 ---
 
-## Visual Showcase Gallery (17 Previews)
+## Visual Showcase Gallery (25 Optimized Previews)
 
-### Part A — Primary Application Views (High-Resolution Previews)
+> All raster screenshots are optimized to lightweight **WebP** (`1200px` wide, 82% quality, `37–58 KB` each) paired with XML-validated vector specs (`5–11 KB` each) for fast, crisp GitHub loading (~521 KB total across all 25 visuals).
 
-| Overview Dashboard (Soft Light Mode) | Clinical Analytics & Reports (Calm Dark Mode) |
+### Part A — Primary Application Views (9 Lightweight WebP Previews)
+
+| 01. Overview Dashboard (Soft Light Mode) | 02. Clinical Analytics & Reports (Calm Dark Mode) |
 |---|---|
-| ![Dashboard Overview Light](docs/screenshots/dashboard-overview-light.jpg) | ![Clinical Analytics Dark Mode](docs/screenshots/analytics-dark-mode.jpg) |
+| ![Dashboard Overview Light](docs/screenshots/dashboard-overview-light.webp) | ![Clinical Analytics Dark Mode](docs/screenshots/analytics-dark-mode.webp) |
 | **6 Pastel KPI Cards, 6-Month Visit Chart, Activity Feed & Patient Queue** | **Date-Range Filter, Multi-Series Recharts & High-Contrast Dark Surfaces** |
 
-| Longitudinal Patient Profile & Vitals Modal | Clinic Schedule Calendar & Master Formulary |
+| 03. Longitudinal Patient Profile & Vitals Modal | 04. Clinic Schedule Calendar & Master Formulary |
 |---|---|
-| ![Patient Vitals Modal](docs/screenshots/patient-vitals-modal.jpg) | ![Schedule and Formulary](docs/screenshots/schedule-and-formulary.jpg) |
+| ![Patient Vitals Modal](docs/screenshots/patient-vitals-modal.webp) | ![Schedule and Formulary](docs/screenshots/schedule-and-formulary.webp) |
 | **Historical BP/Weight Line Chart + Print-Optimized Vitals Summary Table** | **Monthly OPD Encounter Calendar + Searchable 73-Drug Catalog** |
+
+| 05. Today's Clinic OPD Queue & Rx Detail | 06. Master Formulary & Patients Directory |
+|---|---|
+| ![Today Clinic OPD Workspace](docs/screenshots/today-opd-workspace.webp) | ![Master Formulary and Directory](docs/screenshots/formulary-and-directory.webp) |
+| **Active Outpatient Roster, Vitals Strip & Decoded Prescription Preview** | **Searchable Drug Registry with Therapeutic Badges & Export CSV** |
+
+| 07. Reminders Banner, Bell Overlay & Quick Add Modal | 08. Settings & 7-Theme Appearance Studio |
+|---|---|
+| ![Reminders and Quick Add Modal](docs/screenshots/reminders-and-quick-add.webp) | ![Settings and Theme Studio](docs/screenshots/settings-and-themes.webp) |
+| **Schedule-Synced Clinical Alerts + Minimal Walk-In Onboarding Modal** | **7 Live Clinical Themes, Layout Orientation & Doctor Profile Controls** |
 
 <div align="center">
 
-#### Soft-UI Neumorphism Component Pattern Sheet
+#### 09. Soft-UI Neumorphism Component Pattern Sheet
 
-![Design System Pattern Sheet](docs/screenshots/design-system-patterns.jpg)
+![Design System Pattern Sheet](docs/screenshots/design-system-patterns.webp)
 
 </div>
 
 ---
 
-### Part B — Interactive Feature & UI Pattern Previews (12 Detailed Spec Views)
+### Part B — Interactive Feature & UI Pattern Specs (16 Crisp Vector Previews)
 
-| 06. Header Clinical Reminders Banner & Overlay | 07. Quick Add Patient FAB & Onboarding Modal |
+| 10. Header Clinical Reminders Banner & Overlay | 11. Quick Add Patient FAB & Onboarding Modal |
 |---|---|
 | ![Clinical Reminders](docs/screenshots/06-clinical-reminders-banner.svg) | ![Quick Add Patient FAB](docs/screenshots/07-quick-add-patient-fab.svg) |
 
-| 08. Patient Status Filter, Mini Sparklines & CSV | 09. 3-Line Menu Toggle, Icon Rail & Horizontal Nav |
+| 12. Patient Status Filter, Mini Sparklines & CSV | 13. 3-Line Menu Toggle, Icon Rail & Horizontal Nav |
 |---|---|
 | ![Status Filter and CSV](docs/screenshots/08-patient-status-filter-csv.svg) | ![Menu Toggle Navigation](docs/screenshots/09-menu-toggle-navigation.svg) |
 
-| 10. 7-Theme Clinical Token Matrix | 11. Today's Clinic OPD Queue & Rx Preview |
+| 14. 7-Theme Clinical Token Matrix | 15. Today's Clinic OPD Queue & Rx Preview |
 |---|---|
 | ![Theme Matrix Palette](docs/screenshots/10-theme-matrix-palette.svg) | ![Today OPD Ledger](docs/screenshots/11-today-opd-ledger.svg) |
 
-| 12. 43k+ Longitudinal Patient Directory Search | 13. Clinical Rx Shortcuts Matrix (357 Codes) |
+| 16. 43k+ Longitudinal Patient Directory Search | 17. Clinical Rx Shortcuts Matrix (357 Codes) |
 |---|---|
 | ![Patient Directory Search](docs/screenshots/12-patient-directory-search.svg) | ![Rx Shortcuts Library](docs/screenshots/13-rx-shortcuts-library.svg) |
 
-| 14. Medical Certificates & Daily Cashbook | 15. Print-Optimized Clinical Report (`@media print`) |
+| 18. Medical Certificates & Daily Cashbook | 19. Print-Optimized Clinical Report (`@media print`) |
 |---|---|
 | ![Certificates and Cashbook](docs/screenshots/14-certificates-and-cashbook.svg) | ![Print Report Layout](docs/screenshots/15-print-report-layout.svg) |
 
-| 16. 0.8s Shimmer Skeletons, Toasts & Hotkeys | 17. Architecture & Privacy Isolation Infographic |
+| 20. 0.8s Shimmer Skeletons, Toasts & Hotkeys | 21. Architecture & Privacy Isolation Infographic |
 |---|---|
 | ![Skeleton and Motion System](docs/screenshots/16-skeleton-and-motion-system.svg) | ![Architecture Infographic](docs/screenshots/17-architecture-infographic.svg) |
+
+| 22. Synthetic Data Health & Lineage Diagnostics | 23. Interactive Data Explorer & Multi-Table CSV |
+|---|---|
+| ![Data Health and Lineage](docs/screenshots/18-data-health-lineage.svg) | ![Data Explorer CSV](docs/screenshots/19-data-explorer-csv.svg) |
+
+| 24. Responsive Ergonomics (Desktop, Tablet, Mobile) | 25. Walkthrough Modal, Policies & Compact Footer |
+|---|---|
+| ![Responsive Viewports](docs/screenshots/20-responsive-laptop-mobile.svg) | ![Walkthrough and Footer](docs/screenshots/21-walkthrough-about-footer.svg) |
 
 ---
 
@@ -205,6 +226,7 @@ For full sequence diagrams and directory specifications, see [`docs/ARCHITECTURE
 
 | Layer | Technology | Version | Purpose |
 |---|---|---|---|
+| **AI + Human Platform** | Google AI Studio & Gemini | Build / API | Collaborative UI architecture, prototyping & workflow synthesis |
 | **UI Core** | React + React DOM | `19.0.1` | Modular functional components, hooks, strict rendering |
 | **Type Safety** | TypeScript | `~5.8.2` | Strict clinical models (`PatientRecord`, `PrescriptionRecord`, `ClinicSettings`) |
 | **Build Engine** | Vite | `6.2.3` | Instant dev server on port 3000 and fast production bundling |
@@ -312,18 +334,14 @@ npm run preview
 
 ---
 
-## Privacy, Synthetic Data & Public Usage Policy
+## Policies, UI Design Protection & Licensing
 
-> **DATA PRIVACY NOTICE (SYNTHETIC PREVIEW ONLY):**
-> All patient profiles, encounters, vitals, certificates, and financial ledgers shown in this public repository are **100% synthetic dummy data** generated strictly for UI preview and demonstration. **Zero real patient data, private clinic databases, or production API keys are stored or exposed in this repository.**
+> **IMPORTANT PUBLIC USAGE & PROTECTION POLICY:**
+> Please read **[`POLICIES.md`](POLICIES.md)** and **[`LICENSE`](LICENSE)** before reusing any portion of this repository.
 
-### Public Repository Safeguards
-
-- **Hardened `.gitignore`**: Automatically excludes `.env*`, API keys, certificates (`*.pem`, `*.key`), private clinic databases (`*.db`, `*.sqlite`, `*.mdb`, `*.accdb`, `*.sql`, `*.bak`), and exported CSV files (`clinic-patients-*.csv`, `private-data/`).
-- **Open UI Usage Policy**: This repository is public so developers and designers can explore, learn from, and reuse the soft-UI neumorphism architecture under the [`LICENSE`](LICENSE) (**MIT License with Attribution**).
-- **Attribution & AI + Human Craft Disclosure**: This user interface and clinical application experience has been collaboratively crafted by human engineering leadership and AI using **Google AI Studio**, **Gemini**, and modern API tooling. Please retain clear credit to **Pranav Raj Sahu (Hexatom Team / Aronar AI)** when reusing or adapting this UI.
-
-Read the complete policy in [`docs/PRIVACY_AND_DATA_POLICY.md`](docs/PRIVACY_AND_DATA_POLICY.md).
+- **Protected UI Design (Custom Source-Available Public Preview License)**: This repository is publicly viewable for inspection, learning, and local preview, **not** licensed under permissive MIT or Apache-2.0 copying terms. Copying, cloning, rebranding, or redistributing the UI design, layouts, or source code requires prior written permission from **Pranav Raj Sahu (Hexatom Team / Aronar AI)**.
+- **Full Technical Stack & AI + Human Disclosure**: Detailed in **[`POLICIES.md`](POLICIES.md)**, covering **Google AI Studio**, **Gemini**, React 19, TypeScript 5.8, Vite 6, Tailwind CSS v4, Recharts 3, Motion 12, and Lucide React.
+- **Synthetic Preview Data Guarantee**: All clinical profiles, vitals, encounters, and ledgers bundled in this repo are **100% synthetic dummy data** strictly for preview. Private databases (`*.db`, `*.sqlite`, `*.mdb`, `*.sql`), `.env*` secrets, and local CSV exports are blocked by `.gitignore` (see [`docs/PRIVACY_AND_DATA_POLICY.md`](docs/PRIVACY_AND_DATA_POLICY.md)).
 
 ---
 
@@ -334,6 +352,7 @@ Read the complete policy in [`docs/PRIVACY_AND_DATA_POLICY.md`](docs/PRIVACY_AND
 | Platform / Project | Official Link | Category |
 |---|---|---|
 | **GitHub Repository** | [github.com/aarushxox/modern-clinic-neumorphism-dashboard](https://github.com/aarushxox/modern-clinic-neumorphism-dashboard) | Source Code |
+| **Policies & Licensing** | [`POLICIES.md`](POLICIES.md) · [`LICENSE`](LICENSE) | Usage Terms |
 | **Hexatom** | [hexatom-org.vercel.app](https://hexatom-org.vercel.app/) | Agency |
 | **Hexatom Portfolio** | [hexatom.imaginefuture1-7.workers.dev](https://hexatom.imaginefuture1-7.workers.dev/) | Showcase |
 | **Aronar AI** | [aronar-ai.vercel.app](http://aronar-ai.vercel.app/) | AI Venture |

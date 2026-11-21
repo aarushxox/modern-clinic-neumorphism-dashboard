@@ -6,7 +6,7 @@ The visual language of **Modern Clinic Neumorphism Dashboard** combines whisper-
 
 ## Component Pattern Sheet
 
-![Soft-UI Neumorphism Component Pattern Sheet](screenshots/design-system-patterns.jpg)
+![Soft-UI Neumorphism Component Pattern Sheet](screenshots/design-system-patterns.webp)
 
 ---
 

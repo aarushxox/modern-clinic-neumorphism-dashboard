@@ -51,11 +51,11 @@ If you fork this UI to connect it to a real clinical backend:
 
 ---
 
-## 3. Public Open-Usage Policy & Attribution
+## 3. Public Preview Policy, UI Design Protection & Attribution
 
-This UI codebase is publicly accessible so developers, designers, and teams can inspect, learn from, and build upon the soft-UI neumorphism dashboard architecture.
+This codebase is published publicly so developers, designers, and reviewers can inspect the architecture and run the soft-UI neumorphism preview locally.
 
-- **Permitted Use**: You may clone, study, adapt, and customize the UI components and layouts under the terms of the repository `LICENSE` (MIT License with Attribution).
-- **Attribution Requirement**: Retain clear credit to **Pranav Raj Sahu (Hexatom Team / Aronar AI)** and a link back to `https://github.com/aarushxox/modern-clinic-neumorphism-dashboard` in forks, portfolios, and derivative works.
+- **Protected UI Design (Custom License)**: The visual design, layout architecture, and integrated source code are protected under the repository's **[Custom Source-Available Public Preview License](../LICENSE)** and **[Repository Policies](../POLICIES.md)**. Copying, cloning, rebranding, or redistributing the UI design or codebase requires prior written permission from **Pranav Raj Sahu (Hexatom Team / Aronar AI)**.
+- **Permitted Public Use**: Browsing the repository, running local preview evaluations, and sharing links with clear attribution to `https://github.com/aarushxox/modern-clinic-neumorphism-dashboard` are permitted.
 - **AI + Human Craft Disclosure**: This user interface was collaboratively engineered by human design leadership and AI tools (**Google AI Studio**, **Gemini**, and API tooling).
 - **Non-Medical Disclaimer**: This software is a frontend UI showcase and does not provide certified medical diagnosis, clinical decision support, or prescription validation.

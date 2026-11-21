@@ -1,36 +1,62 @@
-MIT License with Attribution & Synthetic Clinical Data Notice
+CUSTOM LICENSE — SOURCE-AVAILABLE PUBLIC PREVIEW LICENSE (ALL RIGHTS RESERVED)
 
 Copyright (c) 2026 Pranav Raj Sahu (Hexatom Team / Aronar AI)
+Repository: https://github.com/aarushxox/modern-clinic-neumorphism-dashboard
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated UI documentation files (the "Software"), to
-deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-sell copies of the Software, subject to the following conditions:
+NOTICE: THIS IS A CUSTOM LICENSE. IT IS NOT AN OPEN-SOURCE LICENSE SUCH AS
+MIT OR APACHE-2.0. Standard permissive licenses (MIT / Apache-2.0) allow
+unrestricted copying and commercial redistribution of UI designs and source
+code, which does not match the intended usage of this repository.
 
-1. Attribution Requirement:
-   The above copyright notice, this permission notice, and clear attribution
-   to Pranav Raj Sahu (Hexatom Team / Aronar AI) and the original repository
-   (https://github.com/aarushxox/modern-clinic-neumorphism-dashboard) shall be
-   included in all copies, forks, or substantial portions of the Software.
+1. PURPOSE OF PUBLIC PUBLICATION
+   This repository is published publicly for visual inspection, live preview,
+   educational review, and portfolio evaluation only.
 
-2. Synthetic Preview Data & Non-Medical Disclaimer:
-   All clinical datasets bundled in this public repository are 100% synthetic
-   placeholder records generated exclusively for UI preview and demonstration.
-   No private patient health information (PHI), real clinical databases, or
-   production credentials are included. This software is a user interface
-   template and is not certified as a medical device or clinical diagnostic
-   authority.
+2. PERMITTED USES (WITHOUT PRIOR WRITTEN PERMISSION)
+   You are permitted to:
+   - View, browse, and read the source code and documentation on GitHub.
+   - Clone and run this repository locally on your own machine solely for
+     personal evaluation, learning, or reviewing the user interface.
+   - Share links to this repository with clear attribution to Pranav Raj Sahu
+     (Hexatom Team / Aronar AI).
 
-3. AI + Human Craft Disclosure:
-   Portions of the user interface architecture and code were collaboratively
-   crafted by human engineering leadership and AI tools (Google AI Studio,
-   Gemini, and API tooling).
+3. RESTRICTIONS (PRIOR WRITTEN PERMISSION REQUIRED)
+   Without prior written permission from the copyright holder (Pranav Raj Sahu),
+   you may NOT:
+   - Copy, clone, fork-and-rebrand, or redistribute the user interface design,
+     layout structure, visual design tokens, or source code in whole or in
+     substantial part.
+   - Publish, deploy, sell, sublicense, or include this UI or codebase in any
+     commercial product, client project, SaaS platform, template marketplace,
+     or competing portfolio.
+   - Remove, alter, or obscure copyright notices, attribution credits, or
+     licensing files (LICENSE and POLICIES.md).
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+4. SYNTHETIC PREVIEW DATA & NON-MEDICAL DISCLAIMER
+   All clinical profiles, encounters, vitals, medicines, certificates, and
+   financial records bundled in this repository are strictly synthetic dummy
+   data created solely for preview purposes. No private patient data or
+   protected health information (PHI) is included. This software is a user
+   interface showcase and is not certified for medical diagnosis, treatment,
+   or clinical decision-making.
+
+5. AI-ASSISTED DEVELOPMENT DISCLOSURE
+   Portions of this interface and codebase were collaboratively created by
+   human engineering and AI tooling (including Google AI Studio, Gemini, and
+   related API tools). All human-authored selection, arrangement, design
+   direction, and code integration remain protected under this license.
+
+6. PERMISSION REQUESTS
+   To request written permission for reuse, licensing, or commercial adoption,
+   contact the author via the official portfolio or repository listed in
+   POLICIES.md.
+
+7. NO WARRANTY & LIMITATION OF LIABILITY
+   THIS SOFTWARE AND DOCUMENTATION ARE PROVIDED "AS IS", WITHOUT WARRANTY OF
+   ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES,
+   OR OTHER LIABILITY ARISING FROM THE USE OF THIS SOFTWARE.
+
+(Plain-language notice: This custom license states the author's usage terms
+clearly in English and does not constitute formal legal advice.)

@@ -49,7 +49,7 @@
   <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
   <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
   <text x="68" y="66" class="lbl" >CLINICAL ACCELERATOR  /  357 PRESCRIPTION TEMPLATES</text>
-  <text x="68" y="96" class="title" >Rx Shortcuts Library & Rapid Dosage Expansion Matrix</text>
+  <text x="68" y="96" class="title" >Rx Shortcuts Library &amp; Rapid Dosage Expansion Matrix</text>
   <text x="68" y="118" class="sub" >Keyboard-searchable clinical shorthands that expand standardized multi-drug regimens and instructions.</text>
   <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
   
@@ -78,14 +78,14 @@
       <text x="1110" y="202" text-anchor="end" class="pill" fill="#267b54">Endocrine</text>
       <text x="818" y="246" class="h2" font-size="15.5">Type 2 Diabetes Follow-Up</text>
       <rect x="818" y="264" width="292" height="72" rx="14" fill="#ffffff" fill-opacity="0.88"/>
-      <text x="830" y="292" class="body" font-size="11.5">TAB GLYCOMET-GP 1 (1-0-0 BF) · Fasting & PPB</text>
+      <text x="830" y="292" class="body" font-size="11.5">TAB GLYCOMET-GP 1 (1-0-0 BF) · Fasting &amp; PPB</text>
       <text x="830" y="314" class="body" font-size="11.5">S + HbA1c review</text>
     
       <rect x="68" y="382" width="336" height="196" rx="22" fill="url(#sandCard)" stroke="#e5e9f0" filter="url(#neuSm)"/>
       <rect x="90" y="404" width="84" height="28" rx="14" fill="#ffffff"/>
       <text x="132" y="422" text-anchor="middle" class="mono" fill="#9c6a22">GERD-5</text>
       <text x="382" y="422" text-anchor="end" class="pill" fill="#9c6a22">Gastrointestinal</text>
-      <text x="90" y="466" class="h2" font-size="15.5">Acid Peptic & Dyspepsia</text>
+      <text x="90" y="466" class="h2" font-size="15.5">Acid Peptic &amp; Dyspepsia</text>
       <rect x="90" y="484" width="292" height="72" rx="14" fill="#ffffff" fill-opacity="0.88"/>
       <text x="102" y="512" class="body" font-size="11.5">CAP PAN-D (1-0-0 AC x 10d) · SYP MUCAL 2 TSF</text>
       <text x="102" y="534" class="body" font-size="11.5"> HS · Avoid late meals</text>

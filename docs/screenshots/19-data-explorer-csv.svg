@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  <defs>
+  <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+    <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+  </filter>
+  <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f4f6f9"/><stop offset="100%" stop-color="#eceff4"/></linearGradient>
+  <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/></linearGradient>
+  <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/></linearGradient>
+  <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/></linearGradient>
+  <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/></linearGradient>
+  <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/></linearGradient>
+</defs>
+<style>
+  .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, sans-serif; fill: #1c2230; }
+  .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+  .lbl { font: 700 11px "Plus Jakarta Sans", sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+  .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+  .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+  .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+  .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+  .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+</style>
+  <rect width="1200" height="680" fill="url(#bgLight)"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl">INTERACTIVE TABLE INSPECTOR  /  MULTI-TABLE CSV EXPORT</text>
+  <text x="68" y="96" class="title">Data Explorer View &amp; One-Click Dataset CSV Exporter</text>
+  <text x="68" y="118" class="sub">Browse synthetic clinical tables, inspect columns, filter rows in real time, and export clean CSV files.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    <rect x="68" y="160" width="290" height="434" rx="22" fill="#f8fafc" stroke="#e5e9f0"/>
+    <text x="92" y="196" class="h2">Preview Tables (22)</text>
+    
+      <rect x="90" y="216" width="246" height="40" rx="14" fill="#ffffff" stroke="#6f63c8"/>
+      <text x="108" y="241" class="mono" fill="#564aa8">Patients_Master</text>
+    
+      <rect x="90" y="266" width="246" height="40" rx="14" fill="transparent" stroke="#e5e9f0"/>
+      <text x="108" y="291" class="mono" fill="#4e5668">Prescriptions_OPD</text>
+    
+      <rect x="90" y="316" width="246" height="40" rx="14" fill="transparent" stroke="#e5e9f0"/>
+      <text x="108" y="341" class="mono" fill="#4e5668">Drugs_Formulary</text>
+    
+      <rect x="90" y="366" width="246" height="40" rx="14" fill="transparent" stroke="#e5e9f0"/>
+      <text x="108" y="391" class="mono" fill="#4e5668">Rx_Shortcuts</text>
+    
+      <rect x="90" y="416" width="246" height="40" rx="14" fill="transparent" stroke="#e5e9f0"/>
+      <text x="108" y="441" class="mono" fill="#4e5668">Medical_Certificates</text>
+    
+      <rect x="90" y="466" width="246" height="40" rx="14" fill="transparent" stroke="#e5e9f0"/>
+      <text x="108" y="491" class="mono" fill="#4e5668">Daily_Cashbook</text>
+    
+      <rect x="90" y="516" width="246" height="40" rx="14" fill="transparent" stroke="#e5e9f0"/>
+      <text x="108" y="541" class="mono" fill="#4e5668">Vitals_History</text>
+    
+
+    <rect x="382" y="160" width="750" height="434" rx="22" fill="#ffffff" stroke="#e5e9f0"/>
+    <text x="410" y="198" class="h2">Table Preview: Patients_Master (Synthetic)</text>
+    <rect x="942" y="174" width="164" height="36" rx="18" fill="#1d222e"/>
+    <text x="1024" y="197" text-anchor="middle" class="pill" fill="#ffffff">Export CSV</text>
+
+    <rect x="410" y="226" width="696" height="36" rx="10" fill="#edf1f7"/>
+    <text x="428" y="249" class="lbl" fill="#4e5668">SNO</text>
+    <text x="512" y="249" class="lbl" fill="#4e5668">FULL NAME</text>
+    <text x="712" y="249" class="lbl" fill="#4e5668">AGE / SEX</text>
+    <text x="842" y="249" class="lbl" fill="#4e5668">LAST VISIT</text>
+    <text x="980" y="249" class="lbl" fill="#4e5668">VISITS</text>
+
+    
+      <rect x="410" y="272" width="696" height="40" rx="10" fill="#ffffff" stroke="#edf0f5"/>
+      <text x="428" y="297" class="mono">#52533</text>
+      <text x="512" y="297" class="body">Synthetic Patient A</text>
+      <text x="712" y="297" class="body">44y M</text>
+      <text x="842" y="297" class="mono">2026-08-12</text>
+      <text x="980" y="297" class="mono" fill="#267b54">12 visits</text>
+    
+      <rect x="410" y="320" width="696" height="40" rx="10" fill="#f8fafc" stroke="#edf0f5"/>
+      <text x="428" y="345" class="mono">#52526</text>
+      <text x="512" y="345" class="body">Synthetic Patient B</text>
+      <text x="712" y="345" class="body">31y F</text>
+      <text x="842" y="345" class="mono">2026-08-11</text>
+      <text x="980" y="345" class="mono" fill="#267b54">11 visits</text>
+    
+      <rect x="410" y="368" width="696" height="40" rx="10" fill="#ffffff" stroke="#edf0f5"/>
+      <text x="428" y="393" class="mono">#52519</text>
+      <text x="512" y="393" class="body">Synthetic Patient C</text>
+      <text x="712" y="393" class="body">58y M</text>
+      <text x="842" y="393" class="mono">2026-08-10</text>
+      <text x="980" y="393" class="mono" fill="#267b54">10 visits</text>
+    
+      <rect x="410" y="416" width="696" height="40" rx="10" fill="#f8fafc" stroke="#edf0f5"/>
+      <text x="428" y="441" class="mono">#52512</text>
+      <text x="512" y="441" class="body">Synthetic Patient D</text>
+      <text x="712" y="441" class="body">27y F</text>
+      <text x="842" y="441" class="mono">2026-08-9</text>
+      <text x="980" y="441" class="mono" fill="#267b54">9 visits</text>
+    
+      <rect x="410" y="464" width="696" height="40" rx="10" fill="#ffffff" stroke="#edf0f5"/>
+      <text x="428" y="489" class="mono">#52505</text>
+      <text x="512" y="489" class="body">Synthetic Patient E</text>
+      <text x="712" y="489" class="body">62y M</text>
+      <text x="842" y="489" class="mono">2026-08-8</text>
+      <text x="980" y="489" class="mono" fill="#267b54">8 visits</text>
+    
+      <rect x="410" y="512" width="696" height="40" rx="10" fill="#f8fafc" stroke="#edf0f5"/>
+      <text x="428" y="537" class="mono">#52498</text>
+      <text x="512" y="537" class="body">Synthetic Patient F</text>
+      <text x="712" y="537" class="body">39y F</text>
+      <text x="842" y="537" class="mono">2026-08-7</text>
+      <text x="980" y="537" class="mono" fill="#267b54">7 visits</text>
+    
+    
+  <text x="68" y="636" class="muted">Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

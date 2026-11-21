@@ -49,7 +49,7 @@
   <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
   <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
   <text x="68" y="66" class="lbl" >DAILY OPD WORKSPACE  /  TODAY CLINIC ROSTER</text>
-  <text x="68" y="96" class="title" >Today Clinic OPD Queue & Decoded Dosage Prescription View</text>
+  <text x="68" y="96" class="title" >Today Clinic OPD Queue &amp; Decoded Dosage Prescription View</text>
   <text x="68" y="118" class="sub" >Date-selectable outpatient roster with examination vitals, structured medication lines, and print-ready prescription sheet.</text>
   <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
   
