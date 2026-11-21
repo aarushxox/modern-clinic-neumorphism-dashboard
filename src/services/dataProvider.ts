@@ -1,7 +1,7 @@
 /**
- * Dr. J.S. Pandey Clinic - Data Provider Service
+ * Dr. Marcus Johnson Clinical Suite - Data Provider Service
  * Decouples the UI layer from underlying storage (CSV/Forensic models)
- * Implements PRD Section 67/68 specifications
+ * Implements PRD Section 67/68 specifications + Quick Add Patient live onboarding
  */
 
 import {
@@ -26,6 +26,46 @@ import {
   getVisitsForPatient,
   getClinicDayEncounters,
 } from '../data/forensicDataset';
+import { formatPrescriptionTreatment } from '../data/krutiDevConverter';
+
+const QUICK_PATIENTS_KEY = 'johnson_clinic_quick_patients_v1';
+
+interface QuickAddedStore {
+  patients: PatientRecord[];
+  encounters: PrescriptionRecord[];
+}
+
+function loadQuickStore(): QuickAddedStore {
+  try {
+    const raw = localStorage.getItem(QUICK_PATIENTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.patients) && Array.isArray(parsed.encounters)) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return { patients: [], encounters: [] };
+}
+
+function saveQuickStore(store: QuickAddedStore): void {
+  try {
+    localStorage.setItem(QUICK_PATIENTS_KEY, JSON.stringify(store));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export interface QuickAddPatientInput {
+  fullName: string;
+  ageYears: number;
+  phone: string;
+  sex?: 'Male' | 'Female' | 'Other';
+  complaint?: string;
+  clinicDate?: string;
+}
 
 export interface PatientSearchFilter {
   query?: string;
@@ -49,21 +89,85 @@ export class ClinicDataProvider {
     return TABLE_METADATA_REGISTRY;
   }
 
-  // Get high-level clinic metrics
+  // Get high-level clinic metrics (including newly onboarded quick arrivals)
   public static getMetrics(): ClinicMetrics {
-    return CLINIC_METRICS;
+    const store = loadQuickStore();
+    return {
+      ...CLINIC_METRICS,
+      currentPatientsCount: CLINIC_METRICS.currentPatientsCount + store.patients.length,
+      highestSerialObserved: CLINIC_METRICS.highestSerialObserved + store.patients.length,
+      historicalVisitsCount: CLINIC_METRICS.historicalVisitsCount + store.encounters.length,
+    };
+  }
+
+  // Rapidly onboard a new walk-in patient and create today's OPD encounter
+  public static addQuickPatient(input: QuickAddPatientInput): {
+    patient: PatientRecord;
+    encounter: PrescriptionRecord;
+  } {
+    const store = loadQuickStore();
+    const parts = input.fullName.trim().split(/\s+/);
+    const firstName = parts[0] || 'Patient';
+    const lastName = parts.slice(1).join(' ') || 'Walk-in';
+    const maxSno = store.patients.reduce((m, p) => Math.max(m, p.sno), 52533);
+    const sno = maxSno + 1;
+    const visitDate = input.clinicDate || '2026-08-12';
+    const birthYear = Math.max(1920, 2026 - Math.round(input.ageYears));
+
+    const patient: PatientRecord = {
+      sno,
+      firstName,
+      lastName,
+      guardianName: 'Walk-in OPD Registration',
+      ageYears: Math.round(input.ageYears),
+      ageMonths: 0,
+      sex: input.sex || 'Male',
+      address: 'OPD Front Desk Arrival',
+      phone: input.phone.trim(),
+      dobirth: `${birthYear}-01-01`,
+      firstVisitDate: visitDate,
+      lastVisitDate: visitDate,
+      totalVisits: 1,
+    };
+
+    const complaint = input.complaint?.trim() || 'General OPD Consultation & Vitals Triage';
+    const rawRx = 'TAB PARACIP 650 (SOS fever/pain)\nTAB PAN-D (1-0-0 Before Breakfast x 5 days)';
+    const formatted = formatPrescriptionTreatment(rawRx);
+
+    const encounter: PrescriptionRecord = {
+      id: `quick-${sno}-${Date.now()}`,
+      sno,
+      date: visitDate,
+      diagonisis: complaint,
+      examination: 'BP: 122/78 mmHg, Pulse: 76/min, Wt: 68 kg, General Condition: Stable (Triage Checked)',
+      investigation: 'Baseline vitals recorded at arrival',
+      treatmentRaw: rawRx,
+      treatmentFormatted: formatted.plainText,
+      medicinesList: formatted.medicines,
+      instruction: 'Follow up with Dr. Marcus Johnson after initial triage.',
+      nextvisit: 'Review in 5 days or SOS',
+      feesrecived: 200,
+      phistory: 'New walk-in arrival',
+      patientName: `${firstName} ${lastName}`.trim(),
+    };
+
+    store.patients.unshift(patient);
+    store.encounters.unshift(encounter);
+    saveQuickStore(store);
+
+    return { patient, encounter };
   }
 
   // Get recent active patients (PRD Section 19)
   public static getRecentActivePatients(limit: number = 5): PatientRecord[] {
-    const list: PatientRecord[] = [];
-    // Select top distinct patients active in latest periods
+    const store = loadQuickStore();
+    const list: PatientRecord[] = [...store.patients.slice(0, limit)];
     const candidateSerials = [52530, 52495, 52410, 52380, 52290, 52150, 51990, 51820];
     for (const sno of candidateSerials) {
+      if (list.length >= limit) break;
       const p = getPatientBySerial(sno);
       if (p) {
         list.push(p);
-        if (list.length >= limit) break;
       }
     }
     return list;
@@ -76,10 +180,11 @@ export class ClinicDataProvider {
     pageSize: number = 25
   ): PaginatedResult<PatientRecord> {
     const q = (filter.query || '').trim().toLowerCase();
+    const store = loadQuickStore();
 
-    // If empty query, show recently active patients
+    // If empty query, show recently active patients (including quick-added ones first)
     if (!q) {
-      const recentPool: PatientRecord[] = [];
+      const recentPool: PatientRecord[] = [...store.patients];
       for (let s = 52533; s >= 52200; s -= 7) {
         const p = getPatientBySerial(s);
         if (p) {
@@ -88,7 +193,7 @@ export class ClinicDataProvider {
         }
       }
 
-      const totalCount = CLINIC_METRICS.currentPatientsCount;
+      const totalCount = CLINIC_METRICS.currentPatientsCount + store.patients.length;
       const startIndex = (page - 1) * pageSize;
       const items = recentPool.slice(startIndex, startIndex + pageSize);
 
@@ -105,13 +210,24 @@ export class ClinicDataProvider {
     const numericMatch = parseInt(q, 10);
     const matches: PatientRecord[] = [];
 
-    if (!isNaN(numericMatch) && numericMatch > 0 && numericMatch <= 52533) {
-      const exact = getPatientBySerial(numericMatch);
-      if (exact) matches.push(exact);
+    // Search quick-added patients first
+    for (const p of store.patients) {
+      const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+      if (
+        fullName.includes(q) ||
+        p.phone.includes(q) ||
+        p.sno.toString().includes(q) ||
+        p.address.toLowerCase().includes(q)
+      ) {
+        matches.push(p);
+      }
     }
 
-    // Scan sample index of diverse patients matching name, phone, address, guardian
-    // Search across realistic representative serial intervals
+    if (!isNaN(numericMatch) && numericMatch > 0 && numericMatch <= 52533) {
+      const exact = getPatientBySerial(numericMatch);
+      if (exact && !matches.some((m) => m.sno === exact.sno)) matches.push(exact);
+    }
+
     const scanStep = q.length > 3 ? 31 : 53;
     for (let sno = 1; sno <= 52533; sno += scanStep) {
       const p = getPatientBySerial(sno);
@@ -125,7 +241,7 @@ export class ClinicDataProvider {
       const matchSno = p.sno.toString().includes(q);
 
       if (matchName || matchGuardian || matchPhone || matchAddress || matchSno) {
-        if (!matches.some(m => m.sno === p.sno)) {
+        if (!matches.some((m) => m.sno === p.sno)) {
           matches.push(p);
         }
       }
@@ -133,7 +249,6 @@ export class ClinicDataProvider {
       if (matches.length >= 150) break;
     }
 
-    // Apply sorting
     if (filter.sortBy === 'name-asc') {
       matches.sort((a, b) => a.firstName.localeCompare(b.firstName));
     } else if (filter.sortBy === 'name-desc') {
@@ -159,17 +274,135 @@ export class ClinicDataProvider {
 
   // Get specific patient profile by Serial Number
   public static getPatient(sno: number): PatientRecord | null {
+    const store = loadQuickStore();
+    const custom = store.patients.find((p) => p.sno === sno);
+    if (custom) return custom;
     return getPatientBySerial(sno);
   }
 
   // Get all visits for a patient (chronological, newest first)
   public static getPatientVisits(patient: PatientRecord): PrescriptionRecord[] {
+    const store = loadQuickStore();
+    const customVisits = store.encounters.filter((e) => e.sno === patient.sno);
+    if (customVisits.length > 0) return customVisits;
     return getVisitsForPatient(patient);
   }
 
   // Get encounters for a clinic day (defaulting to latest recorded date 2026-08-12)
   public static getTodayEncounters(dateStr: string = '2026-08-12'): PrescriptionRecord[] {
-    return getClinicDayEncounters(dateStr);
+    const store = loadQuickStore();
+    const customDay = store.encounters.filter((e) => e.date === dateStr);
+    return [...customDay, ...getClinicDayEncounters(dateStr)];
+  }
+
+  // Retrieve critical clinical reminders derived from the active clinic date schedule
+  public static getClinicalReminders(dateStr: string = '2026-08-12'): {
+    id: string;
+    severity: 'critical' | 'urgent' | 'upcoming';
+    headline: string;
+    detail: string;
+    timeTag: string;
+    scheduleDate: string;
+    patientSno?: number;
+    targetModule: 'today' | 'calendar' | 'dashboard' | 'search';
+    actionLabel: string;
+  }[] {
+    const dayEncounters = ClinicDataProvider.getTodayEncounters(dateStr);
+    const nextEncounter = dayEncounters[0];
+    const urgentLabEncounter =
+      dayEncounters.find((rx, idx) => {
+        const dx = rx.diagonisis.toLowerCase();
+        return (
+          idx > 0 &&
+          (dx.includes('diabetes') ||
+            dx.includes('hypertension') ||
+            dx.includes('typhoid') ||
+            dx.includes('workup') ||
+            dx.includes('fever') ||
+            dx.includes('asthma'))
+        );
+      }) || dayEncounters[1];
+    const followUpEncounter = dayEncounters[2] || dayEncounters[0];
+
+    const pendingLabCount = dayEncounters.filter((rx, idx) => {
+      const dx = rx.diagonisis.toLowerCase();
+      return (
+        dx.includes('diabetes') ||
+        dx.includes('hypertension') ||
+        dx.includes('typhoid') ||
+        dx.includes('workup') ||
+        idx % 4 === 1
+      );
+    }).length;
+
+    const reminders: {
+      id: string;
+      severity: 'critical' | 'urgent' | 'upcoming';
+      headline: string;
+      detail: string;
+      timeTag: string;
+      scheduleDate: string;
+      patientSno?: number;
+      targetModule: 'today' | 'calendar' | 'dashboard' | 'search';
+      actionLabel: string;
+    }[] = [];
+
+    if (nextEncounter) {
+      reminders.push({
+        id: `rem-upcoming-${dateStr}-${nextEncounter.sno}`,
+        severity: 'upcoming',
+        headline: 'Upcoming Appointment in 10 minutes',
+        detail: `${nextEncounter.patientName || `Patient #${nextEncounter.sno}`} (#${nextEncounter.sno}) · ${nextEncounter.diagonisis}`,
+        timeTag: 'In 10 min',
+        scheduleDate: dateStr,
+        patientSno: nextEncounter.sno,
+        targetModule: 'today',
+        actionLabel: 'Open Chart',
+      });
+    }
+
+    if (urgentLabEncounter) {
+      reminders.push({
+        id: `rem-lab-${dateStr}-${urgentLabEncounter.sno}`,
+        severity: 'critical',
+        headline: 'Urgent Lab Report Pending',
+        detail: `${urgentLabEncounter.patientName || `Patient #${urgentLabEncounter.sno}`} (#${urgentLabEncounter.sno}) · ${
+          urgentLabEncounter.investigation || 'CBC, HbA1c & metabolic panel awaiting review'
+        }`,
+        timeTag: 'Urgent',
+        scheduleDate: dateStr,
+        patientSno: urgentLabEncounter.sno,
+        targetModule: 'today',
+        actionLabel: 'Review Lab',
+      });
+    }
+
+    if (followUpEncounter && followUpEncounter.sno !== nextEncounter?.sno) {
+      reminders.push({
+        id: `rem-vitals-${dateStr}-${followUpEncounter.sno}`,
+        severity: 'urgent',
+        headline: 'Vitals & Dosage Verification Due',
+        detail: `${followUpEncounter.patientName || `Patient #${followUpEncounter.sno}`} (#${followUpEncounter.sno}) · ${followUpEncounter.diagonisis}`,
+        timeTag: 'Due 25 min',
+        scheduleDate: dateStr,
+        patientSno: followUpEncounter.sno,
+        targetModule: 'today',
+        actionLabel: 'Inspect Vitals',
+      });
+    }
+
+    reminders.push({
+      id: `rem-schedule-${dateStr}`,
+      severity: 'upcoming',
+      headline: `${dayEncounters.length} OPD Encounters on Schedule (${dateStr})`,
+      detail: `${pendingLabCount} clinical reviews pending sign-off across today's clinic roster`,
+      timeTag: dateStr,
+      scheduleDate: dateStr,
+      targetModule: 'calendar',
+      actionLabel: 'View Schedule',
+    });
+
+    return reminders;
   }
 
   // Get Drug Master Catalog

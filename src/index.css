@@ -731,6 +731,37 @@
     overflow: visible !important;
   }
 
+  .vitals-summary-print {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .print-vitals-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 10pt !important;
+  }
+
+  .print-vitals-table th,
+  .print-vitals-table td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    color: #111827 !important;
+    background: #ffffff !important;
+  }
+
+  .print-vitals-table thead th {
+    background: #f1f5f9 !important;
+    font-weight: 700 !important;
+  }
+
+  .print-vitals-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .space-y-3 > div,
   .space-y-4 > div,
   .space-y-6 > div {

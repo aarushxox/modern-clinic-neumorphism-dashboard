@@ -18,6 +18,10 @@ import {
   BookOpen,
   Filter,
   Heart,
+  Plus,
+  Phone,
+  User,
+  Download,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -28,6 +32,9 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
 } from 'recharts';
+import { motion } from 'motion/react';
+import { Modal } from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { ClinicDataProvider } from '../services/dataProvider';
 import { AnalyticsService } from '../services/analyticsService';
 import { ActiveModule, ClinicSettings, PatientRecord } from '../types/clinic';
@@ -157,6 +164,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectClinicDate,
   settings,
 }) => {
+  const { showToast } = useToast();
   const [visitSeries, setVisitSeries] = useState<VisitSeriesKey>('totalVisits');
   const [genderFilter, setGenderFilter] = useState<'ALL' | 'Male' | 'Female'>('ALL');
   const [selectedScheduleDate, setSelectedScheduleDate] = useState<string>('2026-08-12');
@@ -165,9 +173,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [activityFilter, setActivityFilter] =
     useState<ActivityCategoryFilter>('ALL');
   const [sparklineMetric, setSparklineMetric] = useState<SparklineMetric>('hr');
+  const [refreshTick, setRefreshTick] = useState<number>(0);
 
-  const metrics = ClinicDataProvider.getMetrics();
-  const recentPatients = ClinicDataProvider.getRecentActivePatients(5);
+  // Quick Add Patient FAB Modal state
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState<boolean>(false);
+  const [quickName, setQuickName] = useState<string>('');
+  const [quickAge, setQuickAge] = useState<string>('');
+  const [quickPhone, setQuickPhone] = useState<string>('');
+  const [quickSex, setQuickSex] = useState<'Male' | 'Female'>('Male');
+  const [quickComplaint, setQuickComplaint] = useState<string>('');
+  const [quickFormError, setQuickFormError] = useState<string>('');
+
+  const metrics = useMemo(() => ClinicDataProvider.getMetrics(), [refreshTick]);
+  const recentPatients = useMemo(
+    () => ClinicDataProvider.getRecentActivePatients(5),
+    [refreshTick]
+  );
   const analytics = useMemo(
     () => AnalyticsService.getAnalytics({ gender: genderFilter }),
     [genderFilter]
@@ -175,8 +196,52 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const dayEncounters = useMemo(
     () => ClinicDataProvider.getTodayEncounters(selectedScheduleDate),
-    [selectedScheduleDate]
+    [selectedScheduleDate, refreshTick]
   );
+
+  const handleQuickAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = quickName.trim();
+    const parsedAge = parseInt(quickAge, 10);
+    const cleanedPhone = quickPhone.replace(/[^\d+]/g, '');
+
+    if (trimmedName.length < 2) {
+      setQuickFormError('Please enter the patient full name (at least 2 characters).');
+      return;
+    }
+    if (Number.isNaN(parsedAge) || parsedAge < 1 || parsedAge > 120) {
+      setQuickFormError('Please enter a valid age between 1 and 120 years.');
+      return;
+    }
+    if (cleanedPhone.length < 10) {
+      setQuickFormError('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
+    const { patient } = ClinicDataProvider.addQuickPatient({
+      fullName: trimmedName,
+      ageYears: parsedAge,
+      phone: cleanedPhone,
+      sex: quickSex,
+      complaint: quickComplaint.trim() || undefined,
+      clinicDate: selectedScheduleDate,
+    });
+
+    setRefreshTick((t) => t + 1);
+    setQuickName('');
+    setQuickAge('');
+    setQuickPhone('');
+    setQuickComplaint('');
+    setQuickFormError('');
+    setIsQuickAddOpen(false);
+    setPatientStatusFilter('ALL');
+
+    showToast(
+      `${patient.firstName} ${patient.lastName} (Reg #${patient.sno}) onboarded to ${selectedScheduleDate} OPD queue.`,
+      'success',
+      'Patient Onboarded'
+    );
+  };
 
   const enrichedEncounters = useMemo(
     () =>
@@ -206,6 +271,84 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       { Active: 0, 'Pending Review': 0, Discharged: 0 }
     );
   }, [enrichedEncounters]);
+
+  const handleDownloadFilteredPatientsCsv = () => {
+    if (filteredEncounters.length === 0) {
+      showToast(
+        `No patient records match "${patientStatusFilter}" on ${selectedScheduleDate}.`,
+        'warning',
+        'Nothing to Export'
+      );
+      return;
+    }
+
+    const escapeCsvCell = (value: string | number | null | undefined): string => {
+      const str = value === null || value === undefined ? '' : String(value);
+      if (/[",\r\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = [
+      'Serial No',
+      'Patient Name',
+      'Status',
+      'Age (Years)',
+      'Sex',
+      'Phone',
+      'Visit Date',
+      'Diagnosis',
+      'Latest Heart Rate (bpm)',
+      'Latest Blood Pressure (mmHg)',
+      'Consultation Fee (INR)',
+      'Treatment Summary',
+      'Next Visit',
+    ];
+
+    const rows = filteredEncounters.map(({ rx, status, patient, vitals }) => {
+      const computedAge = patient ? computeCurrentAge(patient).currentAge : '';
+      return [
+        rx.sno,
+        rx.patientName || (patient ? `${patient.firstName} ${patient.lastName}` : `Patient #${rx.sno}`),
+        status,
+        computedAge,
+        patient?.sex || '',
+        patient?.phone || '',
+        rx.date,
+        rx.diagonisis,
+        vitals.latestHr,
+        vitals.latestBp,
+        rx.feesrecived,
+        (rx.treatmentFormatted || rx.treatmentRaw || '').replace(/\s+/g, ' ').trim(),
+        rx.nextvisit || '',
+      ]
+        .map(escapeCsvCell)
+        .join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.map(escapeCsvCell).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const statusSlug = patientStatusFilter.toLowerCase().replace(/\s+/g, '-');
+    const fileName = `clinic-patients-${selectedScheduleDate}-${statusSlug}.csv`;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(
+      `Downloaded ${filteredEncounters.length} ${
+        patientStatusFilter === 'ALL' ? '' : `${patientStatusFilter.toLowerCase()} `
+      }patient records (${fileName}).`,
+      'success',
+      'CSV Export Complete'
+    );
+  };
 
   const recentActivityFeed: ClinicActivityItem[] = useMemo(() => {
     const newestPatient = recentPatients[0];
@@ -425,7 +568,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             Clinical workspace <span className="opacity-40 mx-1">/</span> Overview
           </div>
           <h1 className="text-[26px] sm:text-[30px] font-bold tracking-[-0.03em] text-[var(--text-primary)] leading-tight">
-            Hello, {settings?.doctorName || 'Dr. J.S. Pandey'}
+            Hello, {settings?.doctorName || 'Dr. Marcus Johnson'}
           </h1>
           <p className="text-xs text-[var(--text-muted)] mt-1">
             {dayEncounters.length} consultations recorded on {selectedScheduleDate} · 43,488 longitudinal patient profiles
@@ -943,6 +1086,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   Discharged ({statusCounts.Discharged})
                 </option>
               </select>
+
+              <button
+                id="dashboard-download-patients-csv-btn"
+                type="button"
+                onClick={handleDownloadFilteredPatientsCsv}
+                className="neu-pill-btn h-9 px-3.5 rounded-full text-xs font-semibold text-[var(--text-primary)] inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                title={`Download ${filteredEncounters.length} filtered patient records as CSV`}
+              >
+                <Download className="w-3.5 h-3.5 text-[var(--accent-primary)] shrink-0" />
+                <span>Download CSV</span>
+              </button>
             </div>
           </div>
 
@@ -1280,6 +1434,208 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </section>
       </div>
+
+      {/* Floating Action Button (FAB): Quick Add Patient */}
+      <motion.button
+        id="dashboard-quick-add-patient-fab"
+        type="button"
+        onClick={() => {
+          setQuickFormError('');
+          setIsQuickAddOpen(true);
+        }}
+        whileHover={{ scale: 1.04, y: -2 }}
+        whileTap={{ scale: 0.96 }}
+        className="no-print fixed bottom-6 right-6 z-40 btn-editorial-primary h-12 px-5 rounded-full shadow-xl flex items-center gap-2 text-xs font-bold cursor-pointer"
+        title="Rapidly onboard a new walk-in patient"
+        aria-label="Quick Add Patient"
+      >
+        <span
+          className="w-7 h-7 rounded-full grid place-items-center -ml-1.5"
+          style={{
+            background: 'var(--accent-primary)',
+            color: '#ffffff',
+          }}
+        >
+          <Plus className="w-4 h-4 stroke-[2.6]" />
+        </span>
+        <span>Quick Add Patient</span>
+      </motion.button>
+
+      {/* Quick Add Patient Onboarding Modal */}
+      <Modal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        maxWidth="md"
+        title={
+          <div className="flex items-center gap-2.5">
+            <span
+              className="w-9 h-9 rounded-full grid place-items-center shrink-0"
+              style={{
+                background: 'var(--pastel-sage-bg)',
+                color: 'var(--pastel-sage-fg)',
+              }}
+            >
+              <UserPlus className="w-4 h-4" />
+            </span>
+            <div>
+              <div className="text-base font-bold text-[var(--text-primary)] leading-tight">
+                Quick Add Patient
+              </div>
+              <div className="text-[11px] text-[var(--text-muted)] font-normal">
+                Rapid OPD arrival onboarding for {selectedScheduleDate}
+              </div>
+            </div>
+          </div>
+        }
+        footer={
+          <div className="flex items-center justify-end gap-2.5 w-full">
+            <button
+              type="button"
+              onClick={() => setIsQuickAddOpen(false)}
+              className="neu-pill-btn px-4 py-2 text-xs font-semibold text-[var(--text-secondary)] rounded-full cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              id="quick-add-submit-btn"
+              type="submit"
+              form="quick-add-patient-form"
+              className="btn-editorial-primary px-5 py-2 text-xs font-bold rounded-full inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Register &amp; Add to OPD</span>
+            </button>
+          </div>
+        }
+      >
+        <form id="quick-add-patient-form" onSubmit={handleQuickAddSubmit} className="space-y-4">
+          {quickFormError && (
+            <div
+              className="p-3 rounded-[16px] border text-xs font-semibold"
+              style={{
+                background: 'var(--pastel-rose-bg)',
+                color: 'var(--pastel-rose-fg)',
+                borderColor: 'var(--pastel-rose-border)',
+              }}
+            >
+              {quickFormError}
+            </div>
+          )}
+
+          {/* Required Field 1: Full Name */}
+          <div>
+            <label
+              htmlFor="quick-patient-name"
+              className="text-xs font-semibold text-[var(--text-primary)] block mb-1.5"
+            >
+              Patient Full Name <span style={{ color: 'var(--danger)' }}>*</span>
+            </label>
+            <div className="relative">
+              <User className="w-4 h-4 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="quick-patient-name"
+                type="text"
+                required
+                autoFocus
+                placeholder="e.g. Rohan Verma"
+                value={quickName}
+                onChange={(e) => {
+                  setQuickName(e.target.value);
+                  if (quickFormError) setQuickFormError('');
+                }}
+                className="w-full h-10 pl-10 pr-4 rounded-full text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Required Fields 2 & 3: Age + Phone */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label
+                htmlFor="quick-patient-age"
+                className="text-xs font-semibold text-[var(--text-primary)] block mb-1.5"
+              >
+                Age (Years) <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <input
+                id="quick-patient-age"
+                type="number"
+                min={1}
+                max={120}
+                required
+                placeholder="e.g. 34"
+                value={quickAge}
+                onChange={(e) => {
+                  setQuickAge(e.target.value);
+                  if (quickFormError) setQuickFormError('');
+                }}
+                className="w-full h-10 px-4 rounded-full text-xs font-mono bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="quick-patient-phone"
+                className="text-xs font-semibold text-[var(--text-primary)] block mb-1.5"
+              >
+                Phone Number <span style={{ color: 'var(--danger)' }}>*</span>
+              </label>
+              <div className="relative">
+                <Phone className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  id="quick-patient-phone"
+                  type="tel"
+                  required
+                  placeholder="e.g. 9839012345"
+                  value={quickPhone}
+                  onChange={(e) => {
+                    setQuickPhone(e.target.value);
+                    if (quickFormError) setQuickFormError('');
+                  }}
+                  className="w-full h-10 pl-9 pr-4 rounded-full text-xs font-mono bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Optional Compact Triage Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div>
+              <label
+                htmlFor="quick-patient-sex"
+                className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1.5"
+              >
+                Sex (Optional)
+              </label>
+              <select
+                id="quick-patient-sex"
+                value={quickSex}
+                onChange={(e) => setQuickSex(e.target.value as 'Male' | 'Female')}
+                className="w-full h-9 px-3.5 rounded-full text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--text-primary)] cursor-pointer"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label
+                htmlFor="quick-patient-complaint"
+                className="text-[11px] font-semibold text-[var(--text-muted)] block mb-1.5"
+              >
+                Chief Complaint (Optional)
+              </label>
+              <input
+                id="quick-patient-complaint"
+                type="text"
+                placeholder="e.g. Viral Fever, BP Checkup..."
+                value={quickComplaint}
+                onChange={(e) => setQuickComplaint(e.target.value)}
+                className="w-full h-9 px-3.5 rounded-full text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

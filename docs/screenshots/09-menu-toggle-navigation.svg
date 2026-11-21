@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  
+  <defs>
+    <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="5" flood-color="#ffffff" flood-opacity="0.9"/>
+    </filter>
+    <filter id="neuSm" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#202a40" flood-opacity="0.06"/>
+    </filter>
+    <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4f6f9"/>
+      <stop offset="100%" stop-color="#eceff4"/>
+    </linearGradient>
+    <linearGradient id="sidebarGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e9eef5"/>
+      <stop offset="100%" stop-color="#dfe6f0"/>
+    </linearGradient>
+    <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/>
+    </linearGradient>
+    <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/>
+    </linearGradient>
+    <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/>
+    </linearGradient>
+    <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/>
+    </linearGradient>
+    <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/>
+    </linearGradient>
+    <linearGradient id="limeCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eff5d1"/><stop offset="100%" stop-color="#e7f0be"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif; fill: #1c2230; }
+    .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+    .lbl { font: 700 11px "Plus Jakarta Sans", -apple-system, sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+    .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+    .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+    .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+    .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+    .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+  </style>
+
+  <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl" >NAVIGATION ERGONOMICS  /  SMOOTH SIDEBAR STATE MACHINE</text>
+  <text x="68" y="96" class="title" >3-Line Menu Toggle, Icon-Rail Mode & Horizontal Navigation</text>
+  <text x="68" y="118" class="sub" >Silky collapsible sidebar: 3-line hamburger default switches to red-pink X when expanded, plus right-click horizontal layout.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    <!-- State 1: Default Collapsed Icon Rail -->
+    <rect x="68" y="160" width="336" height="432" rx="22" fill="#f8fafc" stroke="#e5e9f0"/>
+    <text x="92" y="196" class="lbl">STATE 1 · DEFAULT</text>
+    <text x="92" y="220" class="h2">Icon-Rail + 3-Line Menu</text>
+    <rect x="92" y="242" width="64" height="324" rx="18" fill="url(#sidebarGrad)" stroke="#d4dde9"/>
+    <circle cx="124" cy="276" r="16" fill="#ffffff"/>
+    <circle cx="124" cy="326" r="16" fill="#ffffff" filter="url(#neuSm)"/>
+    <circle cx="124" cy="372" r="15" fill="transparent" stroke="#cbd5e1"/>
+    <circle cx="124" cy="416" r="15" fill="transparent" stroke="#cbd5e1"/>
+    <circle cx="124" cy="460" r="15" fill="transparent" stroke="#cbd5e1"/>
+    <!-- Header 3-line button -->
+    <circle cx="204" cy="276" r="24" fill="#ffffff" stroke="#e5e9f0" filter="url(#neu)"/>
+    <line x1="193" y1="269" x2="215" y2="269" stroke="#1c2230" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="193" y1="276" x2="215" y2="276" stroke="#1c2230" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="193" y1="283" x2="215" y2="283" stroke="#1c2230" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="176" y="330" class="body" font-weight="700">Default Button</text>
+    <text x="176" y="352" class="muted">Clean 3-line hamburger</text>
+    <text x="176" y="372" class="muted">Zero icon overlap</text>
+    <text x="176" y="392" class="muted">Hover tooltips enabled</text>
+
+    <!-- State 2: Expanded Sidebar + Red-Pink X -->
+    <rect x="432" y="160" width="336" height="432" rx="22" fill="#f8fafc" stroke="#e5e9f0"/>
+    <text x="456" y="196" class="lbl" fill="#e11d48">STATE 2 · EXPANDED</text>
+    <text x="456" y="220" class="h2">Full Labels + Red-Pink Close</text>
+    <rect x="456" y="242" width="204" height="324" rx="18" fill="url(#sidebarGrad)" stroke="#d4dde9"/>
+    <text x="476" y="276" class="h2" font-size="16">johnson.</text>
+    <circle cx="634" cy="270" r="14" fill="#ffffff" stroke="#d4dde9"/>
+    <rect x="470" y="302" width="176" height="34" rx="17" fill="#ffffff" filter="url(#neuSm)"/>
+    <text x="492" y="324" class="pill" fill="#1c2230">Overview</text>
+    <text x="492" y="362" class="body">Today Clinic (22)</text>
+    <text x="492" y="394" class="body">Patients (43.4k)</text>
+    <text x="492" y="426" class="body">Schedule</text>
+    <text x="492" y="458" class="body">Medicines (73)</text>
+    <!-- Header Red-Pink X -->
+    <circle cx="712" cy="276" r="24" fill="#fcebf1" stroke="#f4d0dd" filter="url(#neu)"/>
+    <line x1="704" y1="268" x2="720" y2="284" stroke="#e11d48" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="720" y1="268" x2="704" y2="284" stroke="#e11d48" stroke-width="2.6" stroke-linecap="round"/>
+    <text x="674" y="330" class="pill" fill="#e11d48">Click to Close</text>
+
+    <!-- State 3: Horizontal Top Nav -->
+    <rect x="796" y="160" width="336" height="432" rx="22" fill="#f8fafc" stroke="#e5e9f0"/>
+    <text x="820" y="196" class="lbl" fill="#267b54">STATE 3 · OPTIONAL</text>
+    <text x="820" y="220" class="h2">Horizontal Pill Bar Mode</text>
+    <rect x="820" y="246" width="288" height="48" rx="24" fill="#ffffff" stroke="#e5e9f0" filter="url(#neuSm)"/>
+    <rect x="828" y="254" width="84" height="32" rx="16" fill="#1d222e"/>
+    <text x="870" y="274" text-anchor="middle" class="pill" fill="#ffffff">Overview</text>
+    <text x="938" y="274" class="pill" fill="#4e5668">Patients</text>
+    <text x="1028" y="274" class="pill" fill="#4e5668">Analytics</text>
+    <rect x="820" y="316" width="288" height="250" rx="18" fill="url(#skyCard)" stroke="#c4dff7"/>
+    <text x="844" y="352" class="h2" font-size="15">Right-Click Context Menu</text>
+    <text x="844" y="380" class="body">- Switch Vertical / Horizontal</text>
+    <text x="844" y="408" class="body">- Force Light / Dark Sidebar</text>
+    <text x="844" y="436" class="body">- Half-Close Icon Rail or Full Hide</text>
+    <text x="844" y="464" class="body">- Persisted via localStorage</text>
+    <text x="844" y="512" class="mono" font-size="11" fill="#2b6ea6">Ctrl+D / Ctrl+S / Ctrl+T / Ctrl+M</text>
+    
+  <text x="68" y="636" class="muted" >Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

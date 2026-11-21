@@ -104,11 +104,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Form local state for branding
   const [brandingForm, setBrandingForm] = useState({
-    clinicName: settings.clinicName || 'Dr. J.S. Pandey Clinic',
-    doctorName: settings.doctorName || 'Dr. J.S. Pandey',
-    clinicDegree: settings.clinicDegree || 'M.B.B.S., M.D. (Medicine)',
-    regNumber: settings.regNumber || 'UPMC-1998-4421',
-    clinicAddress: settings.clinicAddress || 'Main Road, Civil Lines / Indira Nagar, UP',
+    clinicName: settings.clinicName || 'Dr. Marcus Johnson Clinical Suite',
+    doctorName: settings.doctorName || 'Dr. Marcus Johnson',
+    clinicDegree: settings.clinicDegree || 'M.B.B.S., M.D. (Internal Medicine)',
+    regNumber: settings.regNumber || 'GMC-1998-4421',
+    clinicAddress: settings.clinicAddress || 'Main Avenue, Medical Plaza, Suite 204',
     clinicPhone: settings.clinicPhone || '9839000000',
   });
 
@@ -661,8 +661,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">
                   <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Software Platform</span>
-                  <div className="font-bold text-sm text-[var(--text-primary)]">Dr. J.S. Pandey Clinic System</div>
-                  <div className="text-xs text-[var(--text-secondary)]">Version: 2026 Preview Edition (HexAtom)</div>
+                  <div className="font-bold text-sm text-[var(--text-primary)]">Dr. Marcus Johnson Clinical Suite</div>
+                  <div className="text-xs text-[var(--text-secondary)]">Version: 2026 Preview Edition (Hexatom)</div>
                 </div>
 
                 <div className="p-4 rounded-[18px] border border-[var(--border)] bg-[var(--surface-muted)] space-y-1">

@@ -4,6 +4,7 @@ import { ClinicDataProvider } from '../services/dataProvider';
 import { Modal } from '../components/Modal';
 import { useToast } from '../components/Toast';
 import { PatientVitalsChart } from '../components/PatientVitalsChart';
+import { VitalsSummaryWidget } from '../components/VitalsSummaryWidget';
 import {
   AlertTriangle,
   Calendar,
@@ -231,6 +232,15 @@ export const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
 
         {/* Historical Vitals Recharts Visualization */}
         {visits.length > 0 && <PatientVitalsChart visits={visits} />}
+
+        {/* Print-Optimized Clinical Vitals Summary Table */}
+        {visits.length > 0 && (
+          <VitalsSummaryWidget
+            patient={patient}
+            visits={visits}
+            onPrint={handlePrintPatientReport}
+          />
+        )}
 
         {/* Visit History Section */}
         <div className="space-y-4">

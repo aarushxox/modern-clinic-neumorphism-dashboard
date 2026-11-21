@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { HorizontalNav } from './components/HorizontalNav';
 import { DemoGuideModal } from './components/DemoGuideModal';
+import { Footer } from './components/Footer';
 import { PageSkeleton } from './components/Skeleton';
 import { PatientProfileModal } from './views/PatientProfileModal';
 import { DashboardView } from './views/DashboardView';
@@ -25,14 +26,14 @@ import { ActiveModule, PatientRecord, ClinicSettings } from './types/clinic';
 const PAGE_SKELETON_MS = 800;
 
 const DEFAULT_SETTINGS: ClinicSettings = {
-  doctorName: 'Dr. J.S. Pandey',
-  clinicName: 'Dr. J.S. Pandey Clinic',
-  clinicAddress: 'Main Road, Civil Lines / Indira Nagar, UP',
+  doctorName: 'Dr. Marcus Johnson',
+  clinicName: 'Dr. Marcus Johnson Clinical Suite',
+  clinicAddress: 'Main Avenue, Medical Plaza, Suite 204',
   clinicPhone: '9839000000',
-  clinicDegree: 'M.B.B.S., M.D. (Medicine)',
-  regNumber: 'UPMC-1998-4421',
-  sidebarMode: 'expanded',
-  hoverExpansion: true,
+  clinicDegree: 'M.B.B.S., M.D. (Internal Medicine)',
+  regNumber: 'GMC-1998-4421',
+  sidebarMode: 'icon-rail',
+  hoverExpansion: false,
   theme: 'sky-blue',
   navOrientation: 'vertical',
   collapsedBehavior: 'half-close',
@@ -63,7 +64,7 @@ function AppContent() {
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
   const [isPatientModalOpen, setIsPatientModalOpen] = useState<boolean>(false);
   const [isDemoGuideOpen, setIsDemoGuideOpen] = useState<boolean>(false);
-  const [sidebarMode, setSidebarMode] = useState<'expanded' | 'icon-rail' | 'hidden'>('expanded');
+  const [sidebarMode, setSidebarMode] = useState<'expanded' | 'icon-rail' | 'hidden'>('icon-rail');
   const [selectedClinicDate, setSelectedClinicDate] = useState<string>('2026-08-12');
   const [quickSearchQuery, setQuickSearchQuery] = useState<string>('');
 
@@ -71,7 +72,19 @@ function AppContent() {
     try {
       const saved = localStorage.getItem('jsp_clinic_settings');
       if (saved) {
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        const migrated = { ...DEFAULT_SETTINGS, ...parsed };
+        if (typeof migrated.doctorName === 'string' && /pandey/i.test(migrated.doctorName)) {
+          migrated.doctorName = DEFAULT_SETTINGS.doctorName;
+        }
+        if (typeof migrated.clinicName === 'string' && /pandey/i.test(migrated.clinicName)) {
+          migrated.clinicName = DEFAULT_SETTINGS.clinicName;
+        }
+        if (migrated.regNumber === 'UPMC-1998-4421') {
+          migrated.regNumber = DEFAULT_SETTINGS.regNumber;
+        }
+        migrated.sidebarMode = migrated.collapsedBehavior === 'full-close' ? 'hidden' : 'icon-rail';
+        return migrated;
       }
     } catch {
       // fallback
@@ -86,7 +99,12 @@ function AppContent() {
     document.documentElement.classList.toggle('dark', isDark);
   }, [settings.theme]);
 
+  const isFirstSidebarSync = useRef(true);
   useEffect(() => {
+    if (isFirstSidebarSync.current) {
+      isFirstSidebarSync.current = false;
+      return;
+    }
     setSidebarMode(settings.sidebarMode);
   }, [settings.sidebarMode]);
 
@@ -265,6 +283,7 @@ function AppContent() {
           activeModule={activeModule}
           moduleTitle={MODULE_NAMES[activeModule]}
           onNavigate={(mod) => setActiveModule(mod)}
+          onSelectPatient={handleSelectPatient}
           onOpenDemoGuide={() => setIsDemoGuideOpen(true)}
           onToggleSidebar={handleToggleSidebar}
           onQuickSearch={handleQuickSearch}
@@ -360,6 +379,8 @@ function AppContent() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <Footer />
           </div>
         </main>
       </div>

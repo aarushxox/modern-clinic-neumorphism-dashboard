@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  
+  <defs>
+    <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="5" flood-color="#ffffff" flood-opacity="0.9"/>
+    </filter>
+    <filter id="neuSm" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#202a40" flood-opacity="0.06"/>
+    </filter>
+    <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4f6f9"/>
+      <stop offset="100%" stop-color="#eceff4"/>
+    </linearGradient>
+    <linearGradient id="sidebarGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e9eef5"/>
+      <stop offset="100%" stop-color="#dfe6f0"/>
+    </linearGradient>
+    <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/>
+    </linearGradient>
+    <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/>
+    </linearGradient>
+    <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/>
+    </linearGradient>
+    <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/>
+    </linearGradient>
+    <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/>
+    </linearGradient>
+    <linearGradient id="limeCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eff5d1"/><stop offset="100%" stop-color="#e7f0be"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif; fill: #1c2230; }
+    .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+    .lbl { font: 700 11px "Plus Jakarta Sans", -apple-system, sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+    .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+    .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+    .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+    .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+    .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+  </style>
+
+  <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl" >RAPID OPD ONBOARDING  /  FLOATING ACTION WORKFLOW</text>
+  <text x="68" y="96" class="title" >Quick Add Patient FAB & Minimal Arrival Modal</text>
+  <text x="68" y="118" class="sub" >Floating action button in DashboardView for 10-second walk-in onboarding with instant local persistence.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    <rect x="68" y="160" width="460" height="432" rx="22" fill="#f8fafc" stroke="#e5e9f0"/>
+    <text x="96" y="198" class="h2">Floating Action Button Pattern</text>
+    <text x="96" y="220" class="muted">Anchored bottom-right on DashboardView (no-print)</text>
+    <rect x="96" y="252" width="404" height="144" rx="20" fill="url(#sageCard)" stroke="#c5e8d6"/>
+    <text x="122" y="288" class="lbl" fill="#267b54">INSTANT LIVE QUEUE SYNC</text>
+    <text x="122" y="318" class="body">1. Assigns next sequential serial (#52534+)</text>
+    <text x="122" y="344" class="body">2. Creates baseline OPD triage encounter</text>
+    <text x="122" y="370" class="body">3. Refreshes KPIs, queue &amp; toast feedback</text>
+
+    <!-- FAB Preview -->
+    <rect x="190" y="458" width="234" height="54" rx="27" fill="#1d222e" filter="url(#neu)"/>
+    <circle cx="220" cy="485" r="16" fill="#6f63c8"/>
+    <line x1="213" y1="485" x2="227" y2="485" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="220" y1="478" x2="220" y2="492" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="250" y="490" fill="#ffffff" font-size="14" font-weight="700" font-family="Plus Jakarta Sans, sans-serif">Quick Add Patient</text>
+    <text x="307" y="542" text-anchor="middle" class="muted">Spring hover scale (1.04) · Tap (0.96)</text>
+
+    <!-- Onboarding Modal -->
+    <rect x="562" y="160" width="570" height="432" rx="24" fill="#ffffff" stroke="#e5e9f0" filter="url(#neu)"/>
+    <circle cx="610" cy="204" r="20" fill="#e6f6ee"/>
+    <text x="610" y="209" text-anchor="middle" class="pill" fill="#267b54">+</text>
+    <text x="644" y="200" class="h2">Quick Add Patient</text>
+    <text x="644" y="219" class="muted">Rapid OPD arrival onboarding for 2026-08-12</text>
+    <line x1="590" y1="240" x2="1104" y2="240" stroke="#edf0f5"/>
+
+    <text x="594" y="268" class="body" font-weight="600">Patient Full Name *</text>
+    <rect x="594" y="278" width="506" height="42" rx="21" fill="#f2f4f8" stroke="#e5e9f0"/>
+    <text x="616" y="304" class="body">Aarav Sharma</text>
+
+    <text x="594" y="346" class="body" font-weight="600">Age (Years) *</text>
+    <rect x="594" y="356" width="242" height="42" rx="21" fill="#f2f4f8" stroke="#e5e9f0"/>
+    <text x="616" y="382" class="mono">34</text>
+
+    <text x="858" y="346" class="body" font-weight="600">Phone Number *</text>
+    <rect x="858" y="356" width="242" height="42" rx="21" fill="#f2f4f8" stroke="#e5e9f0"/>
+    <text x="880" y="382" class="mono">9839012345</text>
+
+    <text x="594" y="424" class="muted" font-weight="600">Sex (Optional)</text>
+    <rect x="594" y="434" width="154" height="38" rx="19" fill="#f2f4f8" stroke="#e5e9f0"/>
+    <text x="616" y="458" class="body">Male</text>
+
+    <text x="766" y="424" class="muted" font-weight="600">Chief Complaint (Optional)</text>
+    <rect x="766" y="434" width="334" height="38" rx="19" fill="#f2f4f8" stroke="#e5e9f0"/>
+    <text x="788" y="458" class="body">Viral Fever &amp; BP Checkup</text>
+
+    <line x1="590" y1="504" x2="1104" y2="504" stroke="#edf0f5"/>
+    <rect x="774" y="524" width="110" height="40" rx="20" fill="#f2f4f8" stroke="#e5e9f0"/>
+    <text x="829" y="549" text-anchor="middle" class="pill" fill="#4e5668">Cancel</text>
+    <rect x="898" y="524" width="202" height="40" rx="20" fill="#1d222e"/>
+    <text x="999" y="549" text-anchor="middle" class="pill" fill="#ffffff">Register &amp; Add to OPD</text>
+    
+  <text x="68" y="636" class="muted" >Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  
+  <defs>
+    <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="5" flood-color="#ffffff" flood-opacity="0.9"/>
+    </filter>
+    <filter id="neuSm" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#202a40" flood-opacity="0.06"/>
+    </filter>
+    <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4f6f9"/>
+      <stop offset="100%" stop-color="#eceff4"/>
+    </linearGradient>
+    <linearGradient id="sidebarGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e9eef5"/>
+      <stop offset="100%" stop-color="#dfe6f0"/>
+    </linearGradient>
+    <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/>
+    </linearGradient>
+    <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/>
+    </linearGradient>
+    <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/>
+    </linearGradient>
+    <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/>
+    </linearGradient>
+    <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/>
+    </linearGradient>
+    <linearGradient id="limeCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eff5d1"/><stop offset="100%" stop-color="#e7f0be"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif; fill: #1c2230; }
+    .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+    .lbl { font: 700 11px "Plus Jakarta Sans", -apple-system, sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+    .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+    .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+    .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+    .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+    .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+  </style>
+
+  <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl" >SYSTEM ARCHITECTURE  /  CLIENT-ONLY PRIVACY SANDBOX</text>
+  <text x="68" y="96" class="title" >Application Architecture & Synthetic Data Isolation Map</text>
+  <text x="68" y="118" class="sub" >100% browser-side React + TypeScript architecture with strict separation between public synthetic preview data and private environments.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    <!-- Layer 1: UI Presentation -->
+    <rect x="68" y="160" width="1064" height="114" rx="20" fill="url(#lilacCard)" stroke="#d8cff5"/>
+    <text x="96" y="192" class="lbl" fill="#6152b3">LAYER 1 · PRESENTATION &amp; INTERACTION SHELL (REACT 19 + TAILWIND CSS V4 + MOTION 12)</text>
+    
+      <rect x="96" y="210" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="174" y="237" text-anchor="middle" class="pill" fill="#1c2230">Header + Reminders</text>
+    
+      <rect x="266" y="210" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="344" y="237" text-anchor="middle" class="pill" fill="#1c2230">Collapsible Sidebar</text>
+    
+      <rect x="436" y="210" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="514" y="237" text-anchor="middle" class="pill" fill="#1c2230">Dashboard + Sparklines</text>
+    
+      <rect x="606" y="210" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="684" y="237" text-anchor="middle" class="pill" fill="#1c2230">Patient Modal + Vitals</text>
+    
+      <rect x="776" y="210" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="854" y="237" text-anchor="middle" class="pill" fill="#1c2230">Analytics (Recharts)</text>
+    
+      <rect x="946" y="210" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="1024" y="237" text-anchor="middle" class="pill" fill="#1c2230">Print CSS Engine</text>
+    
+
+    <!-- Layer 2: Services & Clinical Logic -->
+    <rect x="68" y="298" width="1064" height="114" rx="20" fill="url(#skyCard)" stroke="#c4dff7"/>
+    <text x="96" y="330" class="lbl" fill="#2b6ea6">LAYER 2 · DOMAIN SERVICES &amp; CLINICAL ENGINES (TYPESCRIPT 5.8 STRICT)</text>
+    
+      <rect x="96" y="348" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="174" y="375" text-anchor="middle" class="pill" fill="#1c2230">ClinicDataProvider</text>
+    
+      <rect x="266" y="348" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="344" y="375" text-anchor="middle" class="pill" fill="#1c2230">AnalyticsService</text>
+    
+      <rect x="436" y="348" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="514" y="375" text-anchor="middle" class="pill" fill="#1c2230">ClinicalCalculations</text>
+    
+      <rect x="606" y="348" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="684" y="375" text-anchor="middle" class="pill" fill="#1c2230">KrutiDev Converter</text>
+    
+      <rect x="776" y="348" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="854" y="375" text-anchor="middle" class="pill" fill="#1c2230">RFC-4180 CSV Exporter</text>
+    
+      <rect x="946" y="348" width="156" height="44" rx="14" fill="#ffffff" filter="url(#neuSm)"/>
+      <text x="1024" y="375" text-anchor="middle" class="pill" fill="#1c2230">Schedule Reminders</text>
+    
+
+    <!-- Layer 3: Privacy & Storage Boundary -->
+    <rect x="68" y="436" width="522" height="156" rx="20" fill="url(#sageCard)" stroke="#c5e8d6"/>
+    <text x="96" y="468" class="lbl" fill="#267b54">PUBLIC PREVIEW DATA LAYER (IN-REPO)</text>
+    <text x="96" y="498" class="body">- Deterministic synthetic clinical dataset (preview only)</text>
+    <text x="96" y="524" class="body">- Browser localStorage for Quick Add &amp; Theme preferences</text>
+    <text x="96" y="550" class="body">- Zero remote PHI transmission · Works 100% offline</text>
+
+    <rect x="614" y="436" width="518" height="156" rx="20" fill="url(#roseCard)" stroke="#f4d0dd"/>
+    <text x="642" y="468" class="lbl" fill="#b44b6d">EXCLUDED PRIVATE BOUNDARY (.GITIGNORE)</text>
+    <text x="642" y="498" class="body">- Real clinic databases (*.db, *.sqlite, *.mdb, *.sql)</text>
+    <text x="642" y="524" class="body">- Environment secrets &amp; API keys (.env, *.pem, *.key)</text>
+    <text x="642" y="550" class="body">- Local CSV exports (clinic-patients-*.csv, private-data/)</text>
+    
+  <text x="68" y="636" class="muted" >Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

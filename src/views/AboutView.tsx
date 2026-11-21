@@ -20,10 +20,10 @@ export const AboutView: React.FC = () => {
             </span>
           </div>
           <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-            Dr. J.S. Pandey Clinic Intelligence System
+            Dr. Marcus Johnson Clinical Intelligence Suite
           </h2>
           <p className="text-xs text-[var(--text-secondary)]">
-            Prepared by HexAtom Engineering for Dr. J.S. Pandey Clinic Legacy Modernization.
+            Prepared by Hexatom Engineering for Dr. Marcus Johnson Clinical Suite Modernization.
           </p>
         </div>
 

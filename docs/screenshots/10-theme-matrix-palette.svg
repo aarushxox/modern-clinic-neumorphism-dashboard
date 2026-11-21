@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="1200" height="680">
+  
+  <defs>
+    <filter id="neu" x="-6%" y="-6%" width="112%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#202a40" flood-opacity="0.06"/>
+      <feDropShadow dx="-2" dy="-2" stdDeviation="5" flood-color="#ffffff" flood-opacity="0.9"/>
+    </filter>
+    <filter id="neuSm" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#202a40" flood-opacity="0.06"/>
+    </filter>
+    <linearGradient id="bgLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4f6f9"/>
+      <stop offset="100%" stop-color="#eceff4"/>
+    </linearGradient>
+    <linearGradient id="sidebarGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e9eef5"/>
+      <stop offset="100%" stop-color="#dfe6f0"/>
+    </linearGradient>
+    <linearGradient id="lilacCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ece8fb"/><stop offset="100%" stop-color="#e4def9"/>
+    </linearGradient>
+    <linearGradient id="sageCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e2f2eb"/><stop offset="100%" stop-color="#d8ede3"/>
+    </linearGradient>
+    <linearGradient id="roseCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fae9f0"/><stop offset="100%" stop-color="#f5dde7"/>
+    </linearGradient>
+    <linearGradient id="skyCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e1f1fb"/><stop offset="100%" stop-color="#d5eaf8"/>
+    </linearGradient>
+    <linearGradient id="sandCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbf0dd"/><stop offset="100%" stop-color="#f6e6cc"/>
+    </linearGradient>
+    <linearGradient id="limeCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eff5d1"/><stop offset="100%" stop-color="#e7f0be"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .title { font: 700 22px "Outfit", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif; fill: #1c2230; }
+    .sub { font: 500 13px "Plus Jakarta Sans", -apple-system, sans-serif; fill: #647086; }
+    .lbl { font: 700 11px "Plus Jakarta Sans", -apple-system, sans-serif; letter-spacing: 0.08em; fill: #6f63c8; }
+    .h2 { font: 700 16px "Outfit", "Plus Jakarta Sans", sans-serif; fill: #1c2230; }
+    .body { font: 500 13px "Plus Jakarta Sans", sans-serif; fill: #4e5668; }
+    .mono { font: 600 12px "JetBrains Mono", ui-monospace, monospace; fill: #1c2230; }
+    .muted { font: 500 11.5px "Plus Jakarta Sans", sans-serif; fill: #7f889a; }
+    .pill { font: 700 11px "Plus Jakarta Sans", sans-serif; }
+  </style>
+
+  <rect width="1200" height="680" fill="url(#bgLight)" rx="0"/>
+  <rect x="36" y="28" width="1128" height="624" rx="28" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.5" filter="url(#neu)"/>
+  <text x="68" y="66" class="lbl" >DESIGN TOKEN ARCHITECTURE  /  7 CURATED CLINICAL THEMES</text>
+  <text x="68" y="96" class="title" >Multi-Theme Clinical Palette Matrix (Light & Calm Dark)</text>
+  <text x="68" y="118" class="sub" >Zero-flicker CSS custom property switching across 5 soft pastel light themes and 2 high-contrast calm dark themes.</text>
+  <line x1="68" y1="136" x2="1132" y2="136" stroke="#edf0f5" stroke-width="1.5"/>
+  
+    
+      <rect x="68" y="162" width="248" height="196" rx="20" fill="#f4f6f9" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="82" y="176" width="48" height="104" rx="12" fill="#e5ebf4"/>
+      <rect x="140" y="176" width="162" height="52" rx="12" fill="#ffffff"/>
+      <rect x="152" y="190" width="72" height="10" rx="5" fill="#6f63c8"/>
+      <rect x="152" y="208" width="124" height="8" rx="4" fill="#1c2230" opacity="0.25"/>
+      <rect x="140" y="236" width="76" height="44" rx="12" fill="#ffffff"/>
+      <rect x="226" y="236" width="76" height="44" rx="12" fill="#ffffff"/>
+      <text x="86" y="310" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#1c2230">Sky Blue (Default)</text>
+      <text x="86" y="330" font-size="10.5" font-weight="700" font-family="monospace" fill="#6f63c8">LIGHT SOFT-UI</text>
+      <circle cx="292" cy="318" r="10" fill="#6f63c8"/>
+    
+      <rect x="344" y="162" width="248" height="196" rx="20" fill="#f3f7fb" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="358" y="176" width="48" height="104" rx="12" fill="#dce8f5"/>
+      <rect x="416" y="176" width="162" height="52" rx="12" fill="#ffffff"/>
+      <rect x="428" y="190" width="72" height="10" rx="5" fill="#3574b5"/>
+      <rect x="428" y="208" width="124" height="8" rx="4" fill="#1b2432" opacity="0.25"/>
+      <rect x="416" y="236" width="76" height="44" rx="12" fill="#ffffff"/>
+      <rect x="502" y="236" width="76" height="44" rx="12" fill="#ffffff"/>
+      <text x="362" y="310" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#1b2432">Neon Modern Blue</text>
+      <text x="362" y="330" font-size="10.5" font-weight="700" font-family="monospace" fill="#3574b5">LIGHT CLINICAL</text>
+      <circle cx="568" cy="318" r="10" fill="#3574b5"/>
+    
+      <rect x="620" y="162" width="248" height="196" rx="20" fill="#f5f3ee" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="634" y="176" width="48" height="104" rx="12" fill="#e6dfd1"/>
+      <rect x="692" y="176" width="162" height="52" rx="12" fill="#fdfcfa"/>
+      <rect x="704" y="190" width="72" height="10" rx="5" fill="#426598"/>
+      <rect x="704" y="208" width="124" height="8" rx="4" fill="#23201c" opacity="0.25"/>
+      <rect x="692" y="236" width="76" height="44" rx="12" fill="#fdfcfa"/>
+      <rect x="778" y="236" width="76" height="44" rx="12" fill="#fdfcfa"/>
+      <text x="638" y="310" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#23201c">Bone White Blue</text>
+      <text x="638" y="330" font-size="10.5" font-weight="700" font-family="monospace" fill="#426598">WARM EDITORIAL</text>
+      <circle cx="844" cy="318" r="10" fill="#426598"/>
+    
+      <rect x="896" y="162" width="248" height="196" rx="20" fill="#f3f7f4" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="910" y="176" width="48" height="104" rx="12" fill="#dcebe0"/>
+      <rect x="968" y="176" width="162" height="52" rx="12" fill="#ffffff"/>
+      <rect x="980" y="190" width="72" height="10" rx="5" fill="#3b895f"/>
+      <rect x="980" y="208" width="124" height="8" rx="4" fill="#1c2921" opacity="0.25"/>
+      <rect x="968" y="236" width="76" height="44" rx="12" fill="#ffffff"/>
+      <rect x="1054" y="236" width="76" height="44" rx="12" fill="#ffffff"/>
+      <text x="914" y="310" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#1c2921">Eco Green</text>
+      <text x="914" y="330" font-size="10.5" font-weight="700" font-family="monospace" fill="#3b895f">BOTANICAL CARE</text>
+      <circle cx="1120" cy="318" r="10" fill="#3b895f"/>
+    
+      <rect x="68" y="382" width="248" height="196" rx="20" fill="#f8f5f6" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="82" y="396" width="48" height="104" rx="12" fill="#efe5e8"/>
+      <rect x="140" y="396" width="162" height="52" rx="12" fill="#ffffff"/>
+      <rect x="152" y="410" width="72" height="10" rx="5" fill="#b44b6d"/>
+      <rect x="152" y="428" width="124" height="8" rx="4" fill="#272025" opacity="0.25"/>
+      <rect x="140" y="456" width="76" height="44" rx="12" fill="#ffffff"/>
+      <rect x="226" y="456" width="76" height="44" rx="12" fill="#ffffff"/>
+      <text x="86" y="530" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#272025">Cherry Red</text>
+      <text x="86" y="550" font-size="10.5" font-weight="700" font-family="monospace" fill="#b44b6d">WARM ROSE</text>
+      <circle cx="292" cy="538" r="10" fill="#b44b6d"/>
+    
+      <rect x="344" y="382" width="248" height="196" rx="20" fill="#131720" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="358" y="396" width="48" height="104" rx="12" fill="#10141c"/>
+      <rect x="416" y="396" width="162" height="52" rx="12" fill="#1b212e"/>
+      <rect x="428" y="410" width="72" height="10" rx="5" fill="#8b7ee8"/>
+      <rect x="428" y="428" width="124" height="8" rx="4" fill="#f1f5f9" opacity="0.25"/>
+      <rect x="416" y="456" width="76" height="44" rx="12" fill="#1b212e"/>
+      <rect x="502" y="456" width="76" height="44" rx="12" fill="#1b212e"/>
+      <text x="362" y="530" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#f1f5f9">Midnight Clinical</text>
+      <text x="362" y="550" font-size="10.5" font-weight="700" font-family="monospace" fill="#8b7ee8">CALM DARK</text>
+      <circle cx="568" cy="538" r="10" fill="#8b7ee8"/>
+    
+      <rect x="620" y="382" width="248" height="196" rx="20" fill="#11131a" stroke="#d5dde8" filter="url(#neuSm)"/>
+      <rect x="634" y="396" width="48" height="104" rx="12" fill="#0d0f15"/>
+      <rect x="692" y="396" width="162" height="52" rx="12" fill="#191d28"/>
+      <rect x="704" y="410" width="72" height="10" rx="5" fill="#6898d8"/>
+      <rect x="704" y="428" width="124" height="8" rx="4" fill="#eef2f9" opacity="0.25"/>
+      <rect x="692" y="456" width="76" height="44" rx="12" fill="#191d28"/>
+      <rect x="778" y="456" width="76" height="44" rx="12" fill="#191d28"/>
+      <text x="638" y="530" font-size="14" font-weight="700" font-family="Outfit, sans-serif" fill="#eef2f9">Night Galaxy</text>
+      <text x="638" y="550" font-size="10.5" font-weight="700" font-family="monospace" fill="#6898d8">DEEP SLATE DARK</text>
+      <circle cx="844" cy="538" r="10" fill="#6898d8"/>
+    
+    <!-- 8th Card: Pastel Semantic Tokens -->
+    <rect x="896" y="382" width="248" height="196" rx="20" fill="#ffffff" stroke="#e5e9f0" filter="url(#neuSm)"/>
+    <text x="916" y="414" class="h2" font-size="14">6 Pastel KPI Surfaces</text>
+    <rect x="916" y="430" width="98" height="34" rx="12" fill="url(#lilacCard)"/><text x="965" y="451" text-anchor="middle" class="pill" fill="#6152b3">Lilac</text>
+    <rect x="1024" y="430" width="98" height="34" rx="12" fill="url(#sageCard)"/><text x="1073" y="451" text-anchor="middle" class="pill" fill="#267b54">Sage</text>
+    <rect x="916" y="474" width="98" height="34" rx="12" fill="url(#limeCard)"/><text x="965" y="495" text-anchor="middle" class="pill" fill="#5f7122">Lime</text>
+    <rect x="1024" y="474" width="98" height="34" rx="12" fill="url(#skyCard)"/><text x="1073" y="495" text-anchor="middle" class="pill" fill="#2b6ea6">Sky</text>
+    <rect x="916" y="518" width="98" height="34" rx="12" fill="url(#roseCard)"/><text x="965" y="539" text-anchor="middle" class="pill" fill="#b44b6d">Rose</text>
+    <rect x="1024" y="518" width="98" height="34" rx="12" fill="url(#sandCard)"/><text x="1073" y="539" text-anchor="middle" class="pill" fill="#9c6a22">Sand</text>
+    
+  <text x="68" y="636" class="muted" >Dr. Marcus Johnson Clinical Suite  |  Synthetic Preview UI  |  modern-clinic-neumorphism-dashboard</text>
+  <text x="1132" y="636" text-anchor="end" class="mono" fill="#7f889a">PUBLIC UI SPEC</text>
+</svg>

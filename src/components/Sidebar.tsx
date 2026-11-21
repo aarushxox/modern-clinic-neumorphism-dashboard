@@ -17,7 +17,8 @@ import {
   Palette,
   Sliders,
   Check,
-  ChevronLeft,
+  X,
+  PanelLeftClose,
   ArrowUpRight,
 } from 'lucide-react';
 import { ActiveModule, ClinicSettings } from '../types/clinic';
@@ -75,6 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   settings,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isCloseBtnHovered, setIsCloseBtnHovered] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -255,7 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isEffectivelyExpanded && (
               <div className="overflow-hidden whitespace-nowrap">
                 <div className="text-[17px] font-bold tracking-tight leading-none text-[var(--text-primary)]">
-                  pandey<span style={{ color: 'var(--accent-primary)' }}>.</span>
+                  johnson<span style={{ color: 'var(--accent-primary)' }}>.</span>
                 </div>
                 <div className="text-[9px] font-semibold tracking-[0.12em] uppercase text-[var(--text-muted)] mt-1">
                   Clinical Suite
@@ -267,12 +269,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {onCloseSidebar && isEffectivelyExpanded && (
             <button
               id="sidebar-close-btn"
-              onClick={onCloseSidebar}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--nav-hover-bg)] transition-colors cursor-pointer shrink-0"
+              type="button"
+              onClick={() => {
+                setIsCloseBtnHovered(false);
+                onCloseSidebar();
+              }}
+              onMouseEnter={() => setIsCloseBtnHovered(true)}
+              onMouseLeave={() => setIsCloseBtnHovered(false)}
+              onFocus={() => setIsCloseBtnHovered(true)}
+              onBlur={() => setIsCloseBtnHovered(false)}
+              style={
+                isCloseBtnHovered
+                  ? {
+                      background: 'var(--pastel-rose-bg)',
+                      color: '#e11d48',
+                      borderColor: 'var(--pastel-rose-border)',
+                    }
+                  : {
+                      background: 'var(--surface-elevated)',
+                      color: 'var(--text-secondary)',
+                      borderColor: 'var(--border)',
+                    }
+              }
+              className="w-8 h-8 rounded-full border shadow-[var(--neu-raised-sm)] flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
               title="Collapse Side Menu"
               aria-label="Collapse Side Menu"
             >
-              <ChevronLeft className="w-4 h-4" />
+              {isCloseBtnHovered ? (
+                <X className="w-4 h-4 stroke-[2.4] transition-transform duration-150" />
+              ) : (
+                <PanelLeftClose className="w-4 h-4 stroke-[2.1] transition-transform duration-150" />
+              )}
             </button>
           )}
         </div>
@@ -329,15 +356,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             title="Clinic Profile & Settings"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e3dbe8] to-[#d2e3e4] dark:from-[#32303c] dark:to-[#283436] text-[#4c4b5c] dark:text-[#e4e2ec] font-bold text-[11px] flex items-center justify-center shrink-0 border border-white/80 dark:border-white/10">
-              JP
+              {((settings?.doctorName || 'Dr. Marcus Johnson')
+                .replace(/^Dr\.?\s*/i, '')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .map((p) => p[0])
+                .slice(0, 2)
+                .join('') || 'MJ'
+              ).toUpperCase()}
             </div>
             {isEffectivelyExpanded && (
               <div className="overflow-hidden whitespace-nowrap min-w-0">
                 <div className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                  {settings?.doctorName || 'Dr. J.S. Pandey'}
+                  {settings?.doctorName || 'Dr. Marcus Johnson'}
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] font-mono truncate">
-                  {settings?.regNumber || 'UPMC-1998-4421'}
+                  {settings?.regNumber || 'GMC-1998-4421'}
                 </div>
               </div>
             )}
